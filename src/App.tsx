@@ -1,0 +1,34 @@
+import { Routes, Route, NavLink } from 'react-router-dom';
+import EmpresaPage from './pages/Empresa';
+import TrabajadoresPage from './pages/Trabajadores';
+import NominaPage from './pages/Nomina';
+import FiniquitosPage from './pages/Finiquitos';
+import ReportesPage from './pages/Reportes';
+import ConfigPage from './pages/Configuracion';
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow p-4 flex gap-4">
+        <NavLink to="/" className="font-bold">NominaMX</NavLink>
+        <NavLink to="/empresa">Empresa</NavLink>
+        <NavLink to="/trabajadores">Trabajadores</NavLink>
+        <NavLink to="/nomina">Nomina</NavLink>
+        <NavLink to="/finiquitos">Finiquitos</NavLink>
+        <NavLink to="/reportes">Reportes</NavLink>
+        <NavLink to="/config">Configuracion</NavLink>
+      </nav>
+      <main className="p-6">
+        <Routes>
+          <Route path="/" element={<EmpresaPage />} />
+          <Route path="/empresa" element={<EmpresaPage />} />
+          <Route path="/trabajadores" element={<TrabajadoresPage />} />
+          <Route path="/nomina" element={<NominaPage />} />
+          <Route path="/finiquitos" element={<FiniquitosPage />} />
+          <Route path="/reportes" element={<ReportesPage />} />
+          <Route path="/config" element={<ConfigPage />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}

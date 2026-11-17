@@ -1,0 +1,49 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version '^2' --locked
+
+      - name: Enable pnpm (used by tauri.conf beforeBuildCommand)
+        run: corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+      - name: Backend tests
+        working-directory: src-tauri
+        run: cargo test
+
+      - name: Backend release build
+        working-directory: src-tauri
+        run: cargo build --release
+
+      - name: Frontend build
+        run: npm ci && npm run build
+
+      - name: Tauri bundle (.dmg on macOS, .msi on Windows)
+        working-directory: src-tauri
+        run: cargo tauri build
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NominaMX-${{ matrix.os }}
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: warn

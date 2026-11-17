@@ -1,0 +1,55 @@
+# Matriz de cumplimiento legal
+
+Estado: **Cubierto** = archivo + función + test verde. **Parcial** = existe función/archivo pero falta test dedicado. **Pendiente** = no existe implementación.
+
+| Ley | Artículo | Requisito | Archivo | Función | Test | Estado |
+|-----|----------|-----------|---------|---------|------|--------|
+| LFT | 76 | Vacaciones por antigüedad | calc/vacaciones.rs | dias_vacaciones_por_antiguedad | vac_anio_01..20 | Cubierto |
+| LFT | 80 | Prima vacacional 25% | calc/vacaciones.rs | calcular_prima_vacacional | prima_vac_25 | Cubierto |
+| LFT | 87 | Aguinaldo 15 días | calc/aguinaldo.rs | calcular_aguinaldo_proporcional | aguinaldo_180 | Cubierto |
+| LFT | 89 | Prima de antigüedad (despido) | calc/liquidacion.rs | calcular_liquidacion | prima_antiguedad_tope_2_sm | Cubierto |
+| LFT | 67-68 | Horas extra | - | - | - | Pendiente |
+| LFT | 117-131 | PTU | - | - | - | Pendiente |
+| LFT | 162 | Salario mínimo | migrations/0002_seed | (parámetro BD) | caso_1_salario_minimo_mensual | Parcial |
+| LFT | 501 | Finiquito/liquidación | calc/finiquito.rs, liquidacion.rs | calcular_finiquito, calcular_liquidacion | finiquito_total, liquidacion_5_anios | Cubierto |
+| LSS | 15/17 | Días de cotización no se reducen por incapacidad | calc/imss.rs | calcular_cuotas_imss | incapacidad_no_reduce_dias_cotizados, incapacidad_no_reduce_cuotas_patronales | Cubierto |
+| LSS | 27 | SBC no cambia por incapacidad | calc/imss.rs, calc/sdi.rs | calcular_cuotas_imss, calcular_sdi | sbc_no_cambia_por_incapacidad, sdi_tope_25_uma | Cubierto |
+| LSS | 29 | Cuotas se causan durante incapacidad | calc/imss.rs | calcular_cuotas_imss | incapacidad_no_reduce_cuotas_obreras, incapacidad_no_reduce_cuotas_patronales | Cubierto |
+| LSS | 106 | Riesgos de trabajo (prima) | calc/imss.rs | calcular_cuotas_imss | imss_patronal_mayor | Parcial |
+| LSS | 107 | Enfermedad y maternidad | calc/imss.rs | calcular_cuotas_imss | imss_obrero_positivo | Cubierto |
+| LSS | 168 | Cesantía patronal (tabla transición 2026) | calc/imss.rs | tasa_cesantia_patronal_2026, calcular_cesantia_patronal | tests/cesantia_2026.rs (14 tests) | Cubierto — tabla transición 2026, máx 7.513%, objetivo 2030 = 11.875% |
+| LISR | 28 | Ingresos exentos | - | - | - | Pendiente |
+| LISR | 96 | Retención ISR | calc/isr.rs | calcular_isr_neto | isr_tramo_01..11 | Cubierto |
+| LISR | 150 | Ajuste anual | - | - | - | Pendiente |
+| RLISR | 174 | Retención mensual | calc/isr.rs | calcular_isr_bruto | isr_tramo_03 | Cubierto |
+| Decreto SE | DOF 01-05-2024 | Subsidio sin excedente | calc/isr.rs | calcular_isr_neto | subsidio_no_excedente_bajo | Cubierto |
+| INFONAVIT | 29 | Aportación 5% SBC | calc/infonavit.rs | calcular_infonavit | infonavit_aport_5pct | Cubierto |
+| LFT | 97 | Descuento INFONAVIT tope 20% SM | calc/infonavit.rs | calcular_infonavit | infonavit_tope_20pct | Cubierto |
+| Reforma INF | DOF feb-2025 | Descuento en incapacidad | calc/infonavit.rs | calcular_infonavit_con_incapacidad | caso_c_infonavit_incapacidad | Cubierto |
+| SAR | - | Aportación 2% SBC | calc/sar.rs | calcular_sar | sar_2pct | Cubierto |
+| ISN | 32 estatales | Tasas por entidad | commands/fiscal.rs | listar_estados_isn | - | Parcial |
+| CFDI | 4.0 / Nomina 1.2 | XML + catálogos XSD + mapeo semántico + identidades V1-V4 | commands/cfdi_cmd.rs | generar_cfdi | cfdi_* (19: mapeo 001/002/019/009, 4 rechazos XSD, parseo real, sensibilidad, totales calculados) | Estructura OK; timbrado real PENDIENTE (sin CSD ni PAC) |
+| CFDI | TotalSueldos/TotalGravado/TotalExento calculados | Suma desde conceptos, excluye 022/023/025/039/044 | commands/cfdi_cmd.rs | totales_percepciones | cfdi_totales_percepciones_calculados | Cubierto |
+| CFDI | Validación de totales vs conceptos | Rechaza total_percepciones distinto de suma | commands/cfdi_cmd.rs | generar_cfdi | cfdi_rechaza_totales_inconsistentes | Cubierto |
+| CFDI | Sello criptográfico | Pendiente (sin CSD) | - | - | - | Pendiente |
+| CFDI | Timbrado con PAC | Pendiente (sin contrato PAC) | - | - | - | Pendiente |
+| INEGI | UMA 2026 | Enero 113.14/3,439.46; desde feb 117.31/3,566.22 | migrations/0002_seed | (parámetro BD) | cargo test + tests/subsidio_2026.rs | Cubierto |
+| Subsidio | Enero 15.59% UMA 2025 | 536.21 = 15.59% × 3,439.46 | migrations/0002_seed | cargar_param_vigente | subsidio_enero_2026_536_21 | Cubierto |
+| Subsidio | Feb-dic 15.02% UMA 2026 | 535.65 = 15.02% × 3,566.22 | migrations/0002_seed | cargar_param_vigente | subsidio_febrero_2026_535_65 | Cubierto |
+| Op | - | Importación CSV/Excel | - | - | - | Pendiente |
+| Op | - | Backup/restore BD | - | - | - | Pendiente |
+| Op | - | Log de auditoría | - | - | - | Pendiente |
+| Op | - | Multi-empresa | - | - | - | Pendiente |
+| Op | - | Recálculo retroactivo SBC | - | - | - | Pendiente |
+
+## Conteo
+- Cubierto: 22
+- Estructura OK; timbrado real PENDIENTE: 1
+- Parcial: 3
+- Pendiente: 11
+- Total filas: 37
+
+## Confirmaciones solicitadas
+- **PTU (LFT 117-131)**: Pendiente — no existe archivo ni función.
+- **Ajuste anual (LISR 150)**: Pendiente — no existe archivo ni función.
+- **Horas extra (LFT 67-68)**: Pendiente — no existe archivo ni función.

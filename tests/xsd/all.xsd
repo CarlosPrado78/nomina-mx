@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import namespace="http://www.sat.gob.mx/cfd/4" schemaLocation="cfdv40.xsd"/>
+  <xs:import namespace="http://www.sat.gob.mx/nomina12" schemaLocation="nomina12.xsd"/>
+</xs:schema>
