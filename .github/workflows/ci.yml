@@ -24,6 +24,11 @@ jobs:
       - name: Enable pnpm (used by tauri.conf beforeBuildCommand)
         run: corepack enable && corepack prepare pnpm@9.15.0 --activate
 
+      # frontendDist (../dist) debe existir antes de cualquier cargo build/test,
+      # porque tauri::generate_context!() lo valida en tiempo de compilacion.
+      - name: Frontend build
+        run: npm ci && npm run build
+
       - name: Backend tests
         working-directory: src-tauri
         run: cargo test
@@ -31,9 +36,6 @@ jobs:
       - name: Backend release build
         working-directory: src-tauri
         run: cargo build --release
-
-      - name: Frontend build
-        run: npm ci && npm run build
 
       - name: Tauri bundle (.dmg on macOS, .msi on Windows)
         working-directory: src-tauri
