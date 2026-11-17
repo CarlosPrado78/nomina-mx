@@ -39,9 +39,10 @@ Log: vacío (sin errores). Proceso terminado con `pkill -f nomina-mx`.
 
 ## Verificación en Windows
 
-No hay VM Windows en el entorno de desarrollo (macOS arm64) y el proyecto no está
-inicializado como repositorio Git con remoto, por lo que no se puede pegar un URL de
-GitHub Actions con el job en verde. Se dejó configurado
+No hay VM Windows en el entorno de desarrollo (macOS arm64). El repositorio local
+sí fue inicializado (commit `a37fef2`) y contiene el workflow, pero no tiene remoto
+configured ni credenciales (`gh` no instalado), por lo que aún no se puede pegar un
+URL de GitHub Actions con el job en verde. Se dejó configurado
 `.github/workflows/ci.yml` con matriz `[macos-latest, windows-latest]` y pasos:
 `cargo test`, `cargo build --release`, `npm ci && npm run build` y `cargo tauri build`.
 
