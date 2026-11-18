@@ -226,4 +226,6 @@ Fuentes oficiales consultadas:
   ejemplo de `invoke` y reglas de validación.
 - Matriz de cumplimiento: fila "Backup/restore BD" → Cubierto; conteo
   actualizado a 27 cubiertos / 40 filas.
-- CI: _pendiente de pegar el URL del run_.
+- CI: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44247615289
+  con `macos-latest` y `windows-latest` en verde; en Windows `cargo test`
+  reportó **155 verdes + 1 ignorado** y `cargo tauri build` generó el `.msi`.
