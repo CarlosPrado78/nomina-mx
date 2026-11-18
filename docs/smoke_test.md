@@ -99,7 +99,13 @@ con `macos-latest` y `windows-latest` en verde.
 
 ### Verificación del ÍTEM C4 (multi-empresa) en Windows
 
-Run: _pendiente de pegar el URL del run de C4_.
+Run: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44258772519
+con `macos-latest` y `windows-latest` en verde.
+
+`cargo test` en `windows-latest`: 22 + 5 (auditoría) + 4 (backup) + 9 + 29 +
+19 + 9 + 5 (multi-empresa) + 3 + 60 = **165 verdes, 1 ignorado**. El
+`Frontend build` compiló `src/pages/EmpresaSelector.tsx` y las pantallas que
+recargan al cambiar de empresa; la UI del selector quedó enlazada en el header.
 
 ## PDF de recibo — "José Pérez Núñez"
 

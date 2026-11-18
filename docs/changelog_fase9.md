@@ -298,4 +298,8 @@ Fuentes oficiales consultadas:
   comandos, ejemplo de `invoke`, UI y evidencia.
 - Matriz de cumplimiento: fila "Multi-empresa" → Cubierto; conteo actualizado
   a 29 cubiertos / 40 filas.
-- CI: _pendiente de pegar el URL del run_.
+- CI: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44258772519
+  con `macos-latest` y `windows-latest` en verde; el `Frontend build` compiló
+  `EmpresaSelector.tsx` y los cambios de `store.ts`/`App.tsx` sin errores de
+  TypeScript, `cargo test` en Windows reportó **165 verdes + 1 ignorado** y
+  `cargo tauri build` generó el `.msi`.
