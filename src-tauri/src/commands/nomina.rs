@@ -1,4 +1,4 @@
-use crate::calc::{imss, infonavit, isn, isr, sar, sdi};
+use crate::calc::{horas_extra, imss, infonavit, isn, isr, sar, sdi};
 use crate::calc::isr::TarifaBracket;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
@@ -22,6 +22,12 @@ pub struct ReciboCalculado {
     pub isn: f64,
     pub costo_total_patron: f64,
     pub sbc_diario: f64,
+    // Bloque B: desglose de tiempo extraordinario (LFT 66/68, LISR 93 I).
+    pub horas_extra_dobles: f64,
+    pub horas_extra_triples: f64,
+    pub horas_extra_importe: f64,
+    pub horas_extra_exento: f64,
+    pub horas_extra_gravado: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -34,6 +40,23 @@ pub struct PeriodoNomina {
     pub fecha_pago: String,
     pub estado: String,
     pub dias: i64,
+}
+
+/// Captura de horas extraordinarias del periodo. `semanas` determina el tope
+/// semanal de la exencion del art. 93 LISR; `salario_minimo` activa el
+/// supuesto de exencion del 100% de las horas dentro del limite laboral.
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct HorasExtraInput {
+    #[serde(default)]
+    pub horas: f64,
+    #[serde(default)]
+    pub dias: i64,
+    #[serde(default)]
+    pub semanas: f64,
+    #[serde(default)]
+    pub jornada: Option<String>,
+    #[serde(default)]
+    pub salario_minimo: Option<bool>,
 }
 
 fn db_url(app: &AppHandle) -> String {
@@ -64,6 +87,7 @@ pub async fn calcular_recibo(
     dias: i64,
     periodicidad: String,
     fecha_pago: String,
+    horas_extra: Option<HorasExtraInput>,
 ) -> Result<ReciboCalculado, String> {
     let p = pool(&app).await?;
     // trabajador
@@ -107,9 +131,41 @@ pub async fn calcular_recibo(
     let sub_max = sub.get("maximo").and_then(|v| v.as_f64()).unwrap_or(535.65);
     let sub_tope = sub.get("tope").and_then(|v| v.as_f64()).unwrap_or(11492.66);
 
+    // Bloque B: los parametros de horas extra se leen de la fila vigente por
+    // fecha_pago. Si no existe fila, falla explicitamente: no se inventan tasas.
+    let he_json = cargar_param_vigente(&app, "horas_extra", &fecha_pago).await
+        .map_err(|e| format!("sin parametros de horas extra vigentes para {}: {}", fecha_pago, e))?;
+    let he_params: horas_extra::ParametrosHorasExtra = serde_json::from_str(&he_json)
+        .map_err(|e| format!("parametros de horas extra invalidos: {}", e))?;
+
+    let he = match horas_extra.as_ref() {
+        Some(h) if h.horas > 0.0 => {
+            let horas_jornada = horas_extra::horas_jornada_diaria(h.jornada.as_deref(), &he_params)?;
+            let desglose = horas_extra::desglosar_horas_extra(
+                h.horas, salario_diario, horas_jornada, &he_params,
+            )?;
+            let semanas = if h.semanas > 0.0 { h.semanas } else { 1.0 };
+            let exencion = horas_extra::calcular_exencion(
+                desglose.importe_dobles,
+                desglose.importe_triples,
+                h.salario_minimo.unwrap_or(false),
+                uma_diaria,
+                semanas,
+                &he_params,
+            );
+            Some((desglose, exencion))
+        }
+        _ => None,
+    };
+
     let dias_f = dias as f64;
-    // SDI
-    let sbc_diario = sdi::calcular_sdi(salario_diario, 15.0, 12.0, 0.25, uma_diaria);
+    // SDI base; las horas extra son salario variable que integra el SBC del
+    // periodo (LSS art. 27) y se topa a 25 UMA (LSS art. 28).
+    let sbc_base = sdi::calcular_sdi(salario_diario, 15.0, 12.0, 0.25, uma_diaria);
+    let sbc_diario = match &he {
+        Some((d, _)) => horas_extra::integrar_en_sbc(sbc_base, d.importe_total, dias_f, uma_diaria)?,
+        None => sbc_base,
+    };
     let sbc_total = sbc_diario * dias_f;
 
     // IMSS
@@ -121,21 +177,25 @@ pub async fn calcular_recibo(
     // SAR
     let sar_aport = sar::calcular_sar(sbc_total);
 
-    // ISR
-    let ingreso_periodo = salario_diario * dias_f;
-    let (isr_neto, _bruto, _sub) = isr::calcular_isr_neto(ingreso_periodo, &tarifa, sub_max, sub_tope);
+    // ISR: solo la parte gravada de las horas extra se suma a la base (LISR 93 I).
+    let ingreso_ordinario = salario_diario * dias_f;
+    let importe_he = he.as_ref().map(|(d, _)| d.importe_total).unwrap_or(0.0);
+    let exento_he = he.as_ref().map(|(_, e)| e.exento).unwrap_or(0.0);
+    let gravado_he = he.as_ref().map(|(_, e)| e.gravado).unwrap_or(0.0);
+    let ingreso_gravado = ingreso_ordinario + gravado_he;
+    let (isr_neto, _bruto, _sub) = isr::calcular_isr_neto(ingreso_gravado, &tarifa, sub_max, sub_tope);
 
-    // ISN
-    let isn_val = isn::calcular_isn(ingreso_periodo, tasa_isn);
+    // ISN: opera sobre el total percibido, incluida la parte exenta de ISR.
+    let total_percepciones = ingreso_ordinario + importe_he;
+    let isn_val = isn::calcular_isn(total_percepciones, tasa_isn);
 
-    let total_percepciones = ingreso_periodo;
     let total_deducciones = isr_neto + cuotas.obrero + info.descuento_trabajador;
     let neto = total_percepciones - total_deducciones;
     let costo_patron = cuotas.patronal + info.aportacion_patronal + sar_aport + isn_val;
 
     Ok(ReciboCalculado {
         trabajador_id,
-        sueldo_bruto: ingreso_periodo,
+        sueldo_bruto: total_percepciones,
         isr: isr_neto,
         imss_obrero: cuotas.obrero,
         infonavit_desc: info.descuento_trabajador,
@@ -149,6 +209,11 @@ pub async fn calcular_recibo(
         isn: isn_val,
         costo_total_patron: costo_patron,
         sbc_diario,
+        horas_extra_dobles: he.as_ref().map(|(d, _)| d.horas_dobles).unwrap_or(0.0),
+        horas_extra_triples: he.as_ref().map(|(d, _)| d.horas_triples).unwrap_or(0.0),
+        horas_extra_importe: importe_he,
+        horas_extra_exento: exento_he,
+        horas_extra_gravado: gravado_he,
     })
 }
 
@@ -181,12 +246,14 @@ pub async fn listar_periodos(app: AppHandle, empresa_id: i64) -> Result<Vec<Peri
 pub async fn guardar_recibo(app: AppHandle, periodo_id: i64, r: ReciboCalculado) -> Result<i64, String> {
     let p = pool(&app).await?;
     let res = sqlx::query(
-        "INSERT INTO recibos (periodo_id, trabajador_id, sueldo_bruto, isr, imss_obrero, infonavit_desc, otras_deducciones, total_percepciones, total_deducciones, neto, cuota_patronal_imss, aportacion_infonavit, aportacion_sar, isn, costo_total_patron) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO recibos (periodo_id, trabajador_id, sueldo_bruto, isr, imss_obrero, infonavit_desc, otras_deducciones, total_percepciones, total_deducciones, neto, cuota_patronal_imss, aportacion_infonavit, aportacion_sar, isn, costo_total_patron, horas_extra_dobles, horas_extra_triples, horas_extra_importe, horas_extra_exento, horas_extra_gravado) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
     )
     .bind(periodo_id).bind(r.trabajador_id).bind(r.sueldo_bruto).bind(r.isr).bind(r.imss_obrero)
     .bind(r.infonavit_desc).bind(r.otras_deducciones).bind(r.total_percepciones).bind(r.total_deducciones)
     .bind(r.neto).bind(r.cuota_patronal_imss).bind(r.aportacion_infonavit).bind(r.aportacion_sar)
     .bind(r.isn).bind(r.costo_total_patron)
+    .bind(r.horas_extra_dobles).bind(r.horas_extra_triples).bind(r.horas_extra_importe)
+    .bind(r.horas_extra_exento).bind(r.horas_extra_gravado)
     .execute(&p).await.map_err(|e| e.to_string())?;
     Ok(res.last_insert_rowid())
 }

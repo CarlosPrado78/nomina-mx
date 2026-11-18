@@ -41,7 +41,8 @@ Genera `.dmg` (macOS) y `.msi` (Windows) en `src-tauri/target/release/bundle`.
 - La app genera CFDI 4.0 Nómina 1.2 con estructura válida (XSD SAT local), pero NO lo timbra.
 - El Sello y Certificado del XML son de ejemplo, no criptográficos.
 - No hay integración con PAC en esta entrega (sin CSD ni contrato).
-- Módulos pendientes v1.1: horas extra, prima dominical, festivos, PTU, ajuste anual, importación CSV, backup automático, log de auditoría, multi-empresa, recálculo retroactivo.
+- Horas extra implementadas en Fase 9 / Bloque B (LFT 66/68, LISR 93 I, CFDI 019).
+- Módulos pendientes v1.1: prima dominical, festivos, PTU, ajuste anual, importación CSV, backup automático, log de auditoría, multi-empresa, recálculo retroactivo.
 - Ver docs/smoke_test.md y docs/matriz_cumplimiento.md para detalle.
 
 ## Estado de fases

@@ -1,5 +1,15 @@
 use serde::{Deserialize, Serialize};
 
+/// Nodo condicional `nomina12:HorasExtra` (catalogo `c_TipoHoras` del SAT):
+/// 01 = dobles, 02 = triples, 03 = simples.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RegistroHorasExtra {
+    pub dias: i64,
+    pub tipo_horas: String,
+    pub horas_reales: i64,
+    pub importe_pagado: f64,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConceptoPercepcion {
     pub tipo: String,
@@ -7,6 +17,9 @@ pub struct ConceptoPercepcion {
     pub concepto: String,
     pub importe_gravado: f64,
     pub importe_exento: f64,
+    // Bloque B: solo aplica cuando TipoPercepcion="019" (Horas extra).
+    #[serde(default)]
+    pub horas_extra: Vec<RegistroHorasExtra>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -73,6 +86,29 @@ fn totales_percepciones(req: &CfdiRequest) -> (f64, f64, f64) {
     (round2(sueldos), round2(gravado), round2(exento))
 }
 
+// Bloque B: nodos `HorasExtra` del complemento Nomina 1.2. El importe se
+// formatea a dos decimales porque el tipo tdCFDI:t_ImporteMXN lo exige.
+fn build_horas_extra(c: &ConceptoPercepcion) -> String {
+    if c.horas_extra.is_empty() {
+        return String::new();
+    }
+    let items = c
+        .horas_extra
+        .iter()
+        .map(|h| {
+            format!(
+                r#"<nomina12:HorasExtra Dias="{}" TipoHoras="{}" HorasExtra="{}" ImportePagado="{:.2}"/>"#,
+                h.dias,
+                h.tipo_horas,
+                h.horas_reales,
+                (h.importe_pagado * 100.0).round() / 100.0,
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n          ");
+    format!("\n          {}\n        ", items)
+}
+
 fn build_percepciones(req: &CfdiRequest) -> String {
     let (sueldos, gravado, exento_total) = totales_percepciones(req);
     let total = req.total_percepciones;
@@ -84,14 +120,27 @@ fn build_percepciones(req: &CfdiRequest) -> String {
         req.conceptos_percepcion
             .iter()
             .map(|c| {
-                format!(
-                    r#"<nomina12:Percepcion TipoPercepcion="{tipo}" Clave="{clave}" Concepto="{concepto}" ImporteGravado="{gravado}" ImporteExento="{exento}"/>"#,
-                    tipo = c.tipo,
-                    clave = c.clave,
-                    concepto = escape_xml(&c.concepto),
-                    gravado = c.importe_gravado,
-                    exento = c.importe_exento,
-                )
+                let hijos = build_horas_extra(c);
+                if hijos.is_empty() {
+                    format!(
+                        r#"<nomina12:Percepcion TipoPercepcion="{tipo}" Clave="{clave}" Concepto="{concepto}" ImporteGravado="{gravado}" ImporteExento="{exento}"/>"#,
+                        tipo = c.tipo,
+                        clave = c.clave,
+                        concepto = escape_xml(&c.concepto),
+                        gravado = c.importe_gravado,
+                        exento = c.importe_exento,
+                    )
+                } else {
+                    format!(
+                        r#"<nomina12:Percepcion TipoPercepcion="{tipo}" Clave="{clave}" Concepto="{concepto}" ImporteGravado="{gravado}" ImporteExento="{exento}">{hijos}</nomina12:Percepcion>"#,
+                        tipo = c.tipo,
+                        clave = c.clave,
+                        concepto = escape_xml(&c.concepto),
+                        gravado = c.importe_gravado,
+                        exento = c.importe_exento,
+                        hijos = hijos,
+                    )
+                }
             })
             .collect::<Vec<_>>()
             .join("\n        ")
@@ -157,6 +206,32 @@ pub async fn generar_cfdi(req: CfdiRequest) -> Result<CfdiResult, String> {
                 "total_deducciones ({}) != suma de conceptos ({})",
                 req.total_deducciones, suma
             ));
+        }
+    }
+
+    // Bloque B: integridad de los nodos HorasExtra (catalogo c_TipoHoras).
+    for c in req.conceptos_percepcion.iter().filter(|c| !c.horas_extra.is_empty()) {
+        if c.tipo != "019" {
+            return Err(format!(
+                "HorasExtra solo aplica a TipoPercepcion=019 (se recibio {})",
+                c.tipo
+            ));
+        }
+        let suma: f64 = c.horas_extra.iter().map(|h| h.importe_pagado).sum();
+        if (suma - (c.importe_gravado + c.importe_exento)).abs() > 0.01 {
+            return Err(format!(
+                "HorasExtra: suma ImportePagado ({}) != ImporteGravado+ImporteExento ({})",
+                suma,
+                c.importe_gravado + c.importe_exento
+            ));
+        }
+        for h in c.horas_extra.iter() {
+            if !["01", "02", "03"].contains(&h.tipo_horas.as_str()) {
+                return Err(format!("TipoHoras invalido: {} (use 01, 02 o 03)", h.tipo_horas));
+            }
+            if h.dias < 1 || h.horas_reales < 1 || h.importe_pagado < 0.0 {
+                return Err("HorasExtra: Dias y HorasExtra deben ser >= 1 e ImportePagado >= 0".to_string());
+            }
         }
     }
 

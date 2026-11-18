@@ -6,8 +6,8 @@ export const api = {
   guardarTrabajador: (trabajador: any) => invoke('guardar_trabajador', { t: trabajador }),
   listarTrabajadores: (empresaId: number) => invoke<any[]>('listar_trabajadores', { empresaId }),
   obtenerTrabajador: (id: number) => invoke<any>('obtener_trabajador', { id }),
-  calcularRecibo: (trabajadorId: number, empresaId: number, dias: number, periodicidad: string, fechaPago: string) =>
-    invoke<any>('calcular_recibo', { trabajadorId, empresaId, dias, periodicidad, fechaPago }),
+  calcularRecibo: (trabajadorId: number, empresaId: number, dias: number, periodicidad: string, fechaPago: string, horasExtra?: any) =>
+    invoke<any>('calcular_recibo', { trabajadorId, empresaId, dias, periodicidad, fechaPago, horasExtra }),
   guardarPeriodo: (periodo: any) => invoke('guardar_periodo', { periodo }),
   listarPeriodos: (empresaId: number) => invoke<any[]>('listar_periodos', { empresaId }),
   guardarRecibo: (periodoId: number, recibo: any) => invoke('guardar_recibo', { periodoId, r: recibo }),

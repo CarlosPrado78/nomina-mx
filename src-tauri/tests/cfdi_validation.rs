@@ -210,6 +210,7 @@ fn cfdi_aguinaldo_usa_tipo_percepcion_002() {
         concepto: "Gratificación Anual".into(),
         importe_gravado: 15000.0,
         importe_exento: 0.0,
+        horas_extra: vec![],
     }];
     let rt = tokio::runtime::Runtime::new().unwrap();
     let xml = rt.block_on(generar_cfdi(r)).unwrap().xml;
@@ -229,6 +230,7 @@ fn cfdi_horas_extra_usa_tipo_percepcion_019() {
         concepto: "Horas Extra".into(),
         importe_gravado: 15000.0,
         importe_exento: 0.0,
+        horas_extra: vec![],
     }];
     let rt = tokio::runtime::Runtime::new().unwrap();
     let xml = rt.block_on(generar_cfdi(r)).unwrap().xml;
@@ -272,10 +274,12 @@ fn cfdi_totales_percepciones_calculados() {
         ConceptoPercepcion {
             tipo: "001".into(), clave: "001".into(), concepto: "Sueldos".into(),
             importe_gravado: 10000.0, importe_exento: 0.0,
+            horas_extra: vec![],
         },
         ConceptoPercepcion {
             tipo: "002".into(), clave: "002".into(), concepto: "Gratificación Anual".into(),
             importe_gravado: 5000.0, importe_exento: 0.0,
+            horas_extra: vec![],
         },
     ];
     let rt = tokio::runtime::Runtime::new().unwrap();
@@ -296,6 +300,7 @@ fn cfdi_rechaza_totales_inconsistentes() {
     r.conceptos_percepcion = vec![ConceptoPercepcion {
         tipo: "001".into(), clave: "001".into(), concepto: "Sueldos".into(),
         importe_gravado: 10000.0, importe_exento: 0.0,
+        horas_extra: vec![],
     }];
     let rt = tokio::runtime::Runtime::new().unwrap();
     let resultado = rt.block_on(generar_cfdi(r));

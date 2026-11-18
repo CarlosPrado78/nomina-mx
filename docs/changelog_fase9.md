@@ -126,3 +126,71 @@
 - **A5:** README con sección "Limitaciones conocidas de esta entrega"; sección de smoke_test renombrada a "CFDI — estado de timbrado (sin PAC)" sin duplicar limitaciones.
 - **Subsidio:** verificado en seed con DOS filas: enero `536.21` (15.59% de UMA 2025) y feb-dic `535.65` (15.02% de UMA 2026), ambas con tope `11492.66`; `calcular_recibo` consulta la fila vigente por `fecha_pago`. Tests: `subsidio_enero_2026_536_21`, `subsidio_febrero_2026_535_65`, `subsidio_consulta_por_fecha_pago_en_calcular_recibo`.
 - `cargo test`: 135 tests verdes + 1 ignorado.
+
+---
+
+## 2026-11-17 — BLOQUE B: Horas extraordinarias (B1-B6)
+
+**Estado:** COMPLETADO. Fase 9 permanece cerrada; este bloque amplía la funcionalidad.
+
+Fuentes oficiales consultadas:
+- LFT arts. 61, 66 y 68, texto vigente desde el 01-05-2026 (DOF 01-05-2026,
+  decreto de reducción de jornada). Art. 66: 100% adicional = hora doble;
+  art. 68: 200% adicional = hora triple, máximo 4 h semanales por encima del
+  tope. Cuarto Transitorio: en 2026 el tope de dobles sigue siendo **9 h**.
+- LISR art. 93 fracc. I (SAT, `wwwmat.sat.gob.mx/articulo/15199`): 50% exento
+  para trabajadores distintos del salario mínimo, tope de 5 veces la unidad
+  de referencia por semana; 100% exento para quien percibe el salario mínimo.
+- Catálogos SAT `c_TipoPercepcion` = `019` (Horas extra) y `c_TipoHoras` =
+  `01` Dobles, `02` Triples, `03` Simples; XSD local `nomina12.xsd`.
+- LSS arts. 27 y 28: el pago variable por horas extra integra el SBC y se topa
+  a 25 UMA diarias.
+
+### B1 — Parámetros y motor de desglose
+- `migrations/0003_horas_extra.sql`: fila `horas_extra` vigente `2026-01-01` a
+  `2026-12-31` con factores 2.0/3.0, topes 9/4 horas, 50% exento, 5 UMA por
+  semana y horas de jornada 8/7/7.5. Registrada como migración 3 en `lib.rs`.
+- `calc/horas_extra.rs`: `horas_jornada_diaria`, `valor_hora_ordinaria` y
+  `desglosar_horas_extra`. Caso canónico: 12 h → 9 dobles + 3 triples;
+  salario diario 400, jornada 8 → hora 50 → 900 + 450 = **1350**.
+- `trece_horas_es_limite_y_catorce_excede` documenta que pagar el exceso no
+  subsana la infracción del art. 68 LFT.
+
+### B2 — Exención ISR
+- `calcular_exencion` aplica la fórmula del art. 93 LISR solo a la parte de
+  horas dobles (dentro del límite laboral); la parte triple queda gravada.
+- Manual con UMA 117.31 y una semana: `900 × 50% = 450 < 5 × 117.31 = 586.55`
+  → exento 450, gravado `1350 − 450 = 900`. Con importe doble 1800 el tope
+  586.55 limita la exención y el gravado es 2113.45.
+
+### B3 — Integración al recibo
+- `commands/nomina.rs` acepta `horas_extra: Option<HorasExtraInput>` con horas,
+  días, semanas, jornada y bandera de salario mínimo; carga los parámetros
+  vigentes por `fecha_pago` (si no hay fila, error explícito: sin hardcodes).
+- `total_percepciones` incluye el importe total; la base ISR incluye solo la
+  parte gravada; SBC incluye el prorrateo con tope de 25 UMA; ISN se calcula
+  sobre el percibido. El desglose se expone en `ReciboCalculado` y se persiste
+  en 5 columnas nuevas de `recibos`.
+- Se registró `guardar_recibo` en el `invoke_handler` (estaba ausente).
+
+### B4 — CFDI Nómina 1.2
+- `ConceptoPercepcion.horas_extra` genera nodos `nomina12:HorasExtra` con
+  `Dias`, `TipoHoras`, `HorasExtra` e `ImportePagado` a dos decimales.
+- `generar_cfdi` rechaza: `HorasExtra` en un concepto que no sea `019`,
+  `TipoHoras` fuera de `01/02/03`, días u horas < 1 y diferencia entre la suma
+  de `ImportePagado` y `ImporteGravado + ImporteExento`.
+
+### B5 — Interfaz
+- `src/pages/Nomina.tsx` captura horas, semanas, jornada y salario mínimo, y
+  muestra dobles, triples y parte exenta en el resultado. `src/lib/tauri.ts`
+  envía el objeto opcional `horasExtra`.
+
+### B6 — Evidencia
+- `src-tauri/tests/horas_extra.rs`: 9 tests (8 nuevos de lógica/CFDI + el caso
+  canónico) con cálculo manual y fuente legal en cada caso. El XML con dos
+  nodos `HorasExtra` pasa `xmllint --noout --schema tests/xsd/all.xsd`.
+- `cargo test`: **151 passed; 0 failed; 1 ignored** (22 unitarios + 9 cálculos
+  + 29 cesantía + 19 CFDI + 9 horas extra + 3 subsidio + 60 validación).
+- Matriz de cumplimiento: filas LFT 66/67-68, LSS 27/28, LISR 93 I y CFDI
+  `c_TipoHoras` marcadas como Cubierto; conteo 26 cubiertos / 40 filas.
+- README: "horas extra" se quitó de la lista de módulos pendientes.

@@ -23,6 +23,12 @@ pub fn run() {
                         sql: include_str!("../migrations/0002_seed_fiscal_2026.sql"),
                         kind: tauri_plugin_sql::MigrationKind::Up,
                     },
+                    tauri_plugin_sql::Migration {
+                        version: 3,
+                        description: "bloque B: parametros de horas extra",
+                        sql: include_str!("../migrations/0003_horas_extra.sql"),
+                        kind: tauri_plugin_sql::MigrationKind::Up,
+                    },
                 ])
                 .build(),
         )
@@ -45,6 +51,7 @@ pub fn run() {
             commands::nomina::calcular_recibo,
             commands::nomina::guardar_periodo,
             commands::nomina::listar_periodos,
+            commands::nomina::guardar_recibo,
             commands::finiquito::calcular_finiquito,
             commands::finiquito::calcular_liquidacion,
             commands::fiscal::obtener_parametros,

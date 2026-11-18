@@ -11,6 +11,11 @@ export default function NominaPage() {
   const [fechaPago, setFechaPago] = useState('');
   const [dias, setDias] = useState(30);
   const [seleccionados, setSeleccionados] = useState<number[]>([]);
+  // Bloque B: captura opcional de tiempo extraordinario.
+  const [horasExtra, setHorasExtra] = useState(0);
+  const [semanasExtra, setSemanasExtra] = useState(1);
+  const [jornadaExtra, setJornadaExtra] = useState('diurna');
+  const [salarioMinimo, setSalarioMinimo] = useState(false);
 
   useEffect(() => { api.listarTrabajadores(1).then(setTrabajadores).catch(console.error); }, []);
 
@@ -24,7 +29,14 @@ export default function NominaPage() {
   const calcular = async () => {
     const out: any[] = [];
     for (const id of seleccionados) {
-      const r = await api.calcularRecibo(id, 1, dias, tipo, fechaPago || '2026-02-28');
+      const horasExtraInput = horasExtra > 0 ? {
+        horas: horasExtra,
+        dias,
+        semanas: semanasExtra,
+        jornada: jornadaExtra,
+        salario_minimo: salarioMinimo,
+      } : undefined;
+      const r = await api.calcularRecibo(id, 1, dias, tipo, fechaPago || '2026-02-28', horasExtraInput);
       out.push(r);
       if (periodoId) await api.guardarRecibo(periodoId, r);
     }
@@ -49,6 +61,19 @@ export default function NominaPage() {
         <input type="date" value={fechaPago} onChange={(e) => setFechaPago(e.target.value)} className="border p-2 rounded" />
         <input type="number" value={dias} onChange={(e) => setDias(Number(e.target.value))} className="border p-2 rounded" placeholder="Dias" />
       </div>
+      <div className="grid grid-cols-4 gap-3 mb-4 border-t pt-3">
+        <input type="number" value={horasExtra} onChange={(e) => setHorasExtra(Number(e.target.value))} className="border p-2 rounded" placeholder="Horas extra" min="0" step="0.5" />
+        <input type="number" value={semanasExtra} onChange={(e) => setSemanasExtra(Number(e.target.value))} className="border p-2 rounded" placeholder="Semanas con extras" min="1" />
+        <select value={jornadaExtra} onChange={(e) => setJornadaExtra(e.target.value)} className="border p-2 rounded">
+          <option value="diurna">Jornada diurna</option>
+          <option value="nocturna">Jornada nocturna</option>
+          <option value="mixta">Jornada mixta</option>
+        </select>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={salarioMinimo} onChange={(e) => setSalarioMinimo(e.target.checked)} />
+          Salario mínimo (ISR 93 I)
+        </label>
+      </div>
       <button onClick={crearPeriodo} className="bg-gray-600 text-white p-2 rounded mb-4">Crear periodo</button>
       {periodoId && <span className="ml-2">Periodo #{periodoId}</span>}
 
@@ -67,7 +92,7 @@ export default function NominaPage() {
         <table className="w-full border mt-6 text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th>Trab</th><th>Percepciones</th><th>ISR</th><th>IMSS</th><th>INFONAVIT</th><th>Neto</th><th>Costo patronal</th>
+              <th>Trab</th><th>Percepciones</th><th>Hras dobles</th><th>Hras triples</th><th>HE exento</th><th>ISR</th><th>IMSS</th><th>INFONAVIT</th><th>Neto</th><th>Costo patronal</th>
             </tr>
           </thead>
           <tbody>
@@ -75,6 +100,9 @@ export default function NominaPage() {
               <tr key={i} className="border-t">
                 <td className="p-1">{r.trabajador_id}</td>
                 <td className="p-1">{r.total_percepciones.toFixed(2)}</td>
+                <td className="p-1">{r.horas_extra_dobles.toFixed(2)}</td>
+                <td className="p-1">{r.horas_extra_triples.toFixed(2)}</td>
+                <td className="p-1">{r.horas_extra_exento.toFixed(2)}</td>
                 <td className="p-1">{r.isr.toFixed(2)}</td>
                 <td className="p-1">{r.imss_obrero.toFixed(2)}</td>
                 <td className="p-1">{r.infonavit_desc.toFixed(2)}</td>

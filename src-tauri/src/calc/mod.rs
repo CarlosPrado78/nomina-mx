@@ -8,3 +8,4 @@ pub mod vacaciones;
 pub mod finiquito;
 pub mod liquidacion;
 pub mod isn;
+pub mod horas_extra;
