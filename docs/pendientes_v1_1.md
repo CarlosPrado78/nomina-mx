@@ -42,3 +42,16 @@ Requisitos pendientes:
 - Registrar la operacion en `audit_log` con el motivo y el UUID del ajuste.
 - Validar el complemento Nómina 1.2 y el Anexo 20 RMF antes de timbrar.
 
+## P1 — Empaquetado Python (NO APLICA)
+
+El reporte P1 exigía PyInstaller/Nuitka, `bundle.resources`, invocación de
+Python y un puerto HTTP. **No aplica a NominaMX**: la arquitectura es Tauri 2 +
+Rust nativo, binario único, SQLite embebido e IPC, sin runtime externo. La
+evidencia técnica está en `docs/respuesta_p1.md`.
+
+Los huecos reales detectados por ese reporte siguen pendientes:
+
+- Verificación visual end-to-end en máquina limpia: **BLOQUEANTE** para v1.0,
+  detallada en `docs/smoke_test.md`.
+- Tag `v0.9.0` y GitHub Release: pendientes hasta cerrar esa verificación.
+

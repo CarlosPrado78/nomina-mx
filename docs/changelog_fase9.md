@@ -394,3 +394,25 @@ Fuentes oficiales consultadas:
   `Recalculo.tsx`, `tauri.ts` y `App.tsx` sin errores de TypeScript, `Backend
   tests` reportó **175 verdes + 1 ignorado** en ambos sistemas y `cargo tauri
   build` generó el `.dmg` y el `.msi`.
+
+---
+
+## 2026-11-18 — Cierre P1 — respuesta técnica y verificación visual
+
+- `docs/respuesta_p1.md`: documento técnico que demuestra que el checklist P1
+  no aplica. NominaMX es Tauri 2 + Rust nativo, binario único de 4.9 MB,
+  SQLite embebido vía SQLx e IPC de Tauri; no hay Python, Node ni runtime
+  externo. Se pegaron los outputs literales del reporte (`find` y `grep` sin
+  salida, sin `bundle.resources`, sin `TcpListener`, binario 4.9 MB).
+- Huecos reales confirmados: verificación visual end-to-end en máquina limpia
+  y tag de release.
+- Verificación visual: **BLOQUEANTE**. El host tiene Python 3.14 y cargo; la VM
+  Windows 11 en Parallels no permite `prlctl exec`, `capture` ni
+  `send-key-event` en esta edición; Docker no está instalado. Registrado en
+  `docs/smoke_test.md` con el detalle paso a paso y las carpetas placeholder
+  `docs/evidencia/verificacion_visual/{windows,macos}/`.
+- No se crea el tag `v0.9.0` ni la GitHub Release: la instrucción lo condiciona
+  a que la verificación visual termine con éxito. Tampoco se crea
+  `docs/release_notes_v0_9.md` (solo si la verificación se completa).
+- `docs/pendientes_v1_1.md`: confirmación de que P1 no aplica, con referencia a
+  `docs/respuesta_p1.md`.

@@ -160,6 +160,59 @@ El detalle de esta limitación está en la siguiente sección; no se duplica aqu
 - Sin contrato con un PAC autorizado (Finkok, SW Sapien, Solución Factible, etc.) no se puede obtener UUID ni estatus "Timbrado".
 - El endpoint PAC está configurado en config pero no probado contra sandbox real (no hay credenciales).
 
+## Verificación visual end-to-end
+
+**Estado: BLOQUEANTE para v1.0.**
+
+Verificación visual end-to-end pendiente por falta de entorno limpio. El CI
+compila y empaqueta .msi/.dmg, pero no ejecuta la app.
+
+**v0.9 NO LISTO para piloto hasta cerrar esto.**
+
+### Entornos disponibles y por qué no son válidos
+
+| Entorno | Comprobación | Resultado |
+|---------|--------------|-----------|
+| Host macOS actual | `command -v python3` → `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3`; `command -v cargo` → `/Users/carlos.dakem/.cargo/bin/cargo` | ❌ no es limpio (tiene Python y Rust) |
+| VM Windows 11 (Parallels) | `prlctl exec ...` → `The command is available only in Parallels Desktop for Mac Pro or Business Edition.` | ❌ sin control por CLI |
+| VM Windows 11 (Parallels) | `prlctl capture ...` → mismo mensaje | ❌ sin captura de pantalla |
+| VM Windows 11 (Parallels) | `prlctl send-key-event ...` → mismo mensaje | ❌ sin automatización de GUI |
+| Docker | `command -v docker` → no instalado | ❌ no disponible |
+
+### A) Windows limpio
+
+| Paso | Resultado | Captura |
+|------|-----------|---------|
+| Descargar artefacto `NominaMX-windows-latest` del run 44269152626 | ❌ no ejecutado | — |
+| Instalar .msi (SmartScreen → Más información → Ejecutar de todas formas) | ❌ no ejecutado | — |
+| Crear empresa RFC `XAXX010101000` | ❌ no ejecutado | — |
+| Alta de José Pérez Núñez, salario $500/día, quincenal | ❌ no ejecutado | — |
+| Periodo y recibo calculado | ❌ no ejecutado | — |
+| Exportar PDF y abrir en Edge; verificar acentos | ❌ no ejecutado | — |
+| Verificar `%APPDATA%\com.nomina.mx\nomina.db` | ❌ no ejecutado | — |
+
+### B) Mac limpia
+
+| Paso | Resultado | Captura |
+|------|-----------|---------|
+| Descargar artefacto `NominaMX-macos-latest` del run 44269152626 | ❌ no ejecutado | — |
+| Instalar .dmg (Gatekeeper → clic derecho → Abrir) | ❌ no ejecutado | — |
+| Empresa → trabajador → periodo → recibo → PDF | ❌ no ejecutado | — |
+| Verificar acentos en Preview | ❌ no ejecutado | — |
+| Verificar `~/Library/Application Support/com.nomina.mx/nomina.db` | ❌ no ejecutado | — |
+
+### C) Flujo CSV
+
+| Paso | Resultado | Captura |
+|------|-----------|---------|
+| Descargar plantilla desde la app | ❌ no ejecutado | — |
+| Llenar 2–3 filas válidas e importar | ❌ no ejecutado | — |
+| Verificar trabajadores insertados | ❌ no ejecutado | — |
+
+Las carpetas `docs/evidencia/verificacion_visual/windows/` y
+`docs/evidencia/verificacion_visual/macos/` existen como placeholder; no
+contienen capturas porque no hubo entorno limpio utilizable.
+
 ## Resumen
 
 | Evidencia | Estado |
@@ -169,3 +222,4 @@ El detalle de esta limitación está en la siguiente sección; no se duplica aqu
 | Build/ejecución .msi Windows | OK (CI windows-latest, run 44016157633) |
 | PDF acentos en Preview/Edge | Archivo generado; revisión visual pendiente |
 | CFDI timbrado sandbox (UUID) | Pendiente |
+| Verificación visual end-to-end en entorno limpio | BLOQUEANTE |
