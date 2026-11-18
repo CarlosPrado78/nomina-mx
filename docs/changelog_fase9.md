@@ -260,4 +260,7 @@ Fuentes oficiales consultadas:
   SQL y evidencia.
 - Matriz de cumplimiento: fila "Log de auditoría" → Cubierto; conteo actualizado
   a 28 cubiertos / 40 filas.
-- CI: _pendiente de pegar el URL del run_.
+- CI: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44254760359
+  con `macos-latest` y `windows-latest` en verde; el `Frontend build` compiló
+  `Auditoria.tsx` sin errores de TypeScript, `cargo test` en Windows reportó
+  **160 verdes + 1 ignorado** y `cargo tauri build` generó el `.msi`.

@@ -89,7 +89,13 @@ El XML con `TipoPercepcion="019"` y dos nodos `HorasExtra` valida contra el XSD 
 
 ### Verificación del ÍTEM C3 (log de auditoría) en Windows
 
-Run: _pendiente de pegar el URL del run de C3_.
+Run: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44254760359
+con `macos-latest` y `windows-latest` en verde.
+
+`cargo test` en `windows-latest`: 22 + 5 (auditoría) + 4 (backup) + 9 + 29 +
+19 + 9 + 3 + 60 = **160 verdes, 1 ignorado**. El frontend compiló
+`src/pages/Auditoria.tsx` en el paso `Frontend build` y la UI quedó enlazada en
+`/auditoria`.
 
 ## PDF de recibo — "José Pérez Núñez"
 
