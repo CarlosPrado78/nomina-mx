@@ -59,6 +59,9 @@ pub fn run() {
             commands::fiscal::listar_estados_isn,
             commands::cfdi_cmd::generar_cfdi,
             commands::reportes::reporte_cuotas_imss,
+            commands::backup::backup_db,
+            commands::backup::restore_db,
+            commands::backup::listar_backups,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

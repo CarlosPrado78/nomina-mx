@@ -1,3 +1,4 @@
+pub mod backup;
 pub mod empresa;
 pub mod trabajador;
 pub mod nomina;

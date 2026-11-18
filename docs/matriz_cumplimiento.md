@@ -39,16 +39,16 @@ Estado: **Cubierto** = archivo + función + test verde. **Parcial** = existe fun
 | Subsidio | Enero 15.59% UMA 2025 | 536.21 = 15.59% × 3,439.46 | migrations/0002_seed | cargar_param_vigente | subsidio_enero_2026_536_21 | Cubierto |
 | Subsidio | Feb-dic 15.02% UMA 2026 | 535.65 = 15.02% × 3,566.22 | migrations/0002_seed | cargar_param_vigente | subsidio_febrero_2026_535_65 | Cubierto |
 | Op | - | Importación CSV/Excel | - | - | - | Pendiente |
-| Op | - | Backup/restore BD | - | - | - | Pendiente |
+| Op | - | Backup/restore BD (art. 28 CFF, conservación) | commands/backup.rs | backup_db, restore_db, listar_backups | tests/backup.rs: backup_genera_archivo_valido, restore_reemplaza_bd, restore_rechaza_archivo_corrupto, backup_no_sobrescribe | Cubierto |
 | Op | - | Log de auditoría | - | - | - | Pendiente |
 | Op | - | Multi-empresa | - | - | - | Pendiente |
 | Op | - | Recálculo retroactivo SBC | - | - | - | Pendiente |
 
 ## Conteo
-- Cubierto: 26
+- Cubierto: 27
 - Estructura OK; timbrado real PENDIENTE: 1
 - Parcial: 3
-- Pendiente: 10
+- Pendiente: 9
 - Total filas: 40
 
 ## Confirmaciones solicitadas

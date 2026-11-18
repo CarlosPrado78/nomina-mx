@@ -197,3 +197,33 @@ Fuentes oficiales consultadas:
 - CI posterior al bloque: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44242695969
   con `macos-latest` y `windows-latest` en verde; en Windows `cargo test`
   reportó **151 verdes + 1 ignorado** y `cargo tauri build` generó el `.msi`.
+
+---
+
+## 2026-11-17 — BLOQUE C / ÍTEM C1: Backup y restore de la BD
+
+**Estado:** COMPLETADO.
+
+- `src-tauri/src/commands/backup.rs`: nuevos comandos Tauri `backup_db`,
+  `restore_db` y `listar_backups`, registrados en `lib.rs` y en `commands/mod.rs`.
+- Referencia: art. 28 del CFF (conservación de documentación fiscal) y guías del
+  SAT sobre conservación de información contable. No hay fórmula fiscal: se
+  verifica integridad, recuperación y no sobrescritura.
+- `sqlx 0.8` no expone `backup()`, por lo que se usa `VACUUM INTO` (forma SQL
+  del *online backup* de SQLite, equivalente a `.backup` de la CLI).
+- Respaldos con nombre `nomina_backup_YYYYMMDD_HHMMSS.db` y sufijo `_N` si se
+  generan dos en el mismo segundo. `backup_db` valida que el destino exista y
+  sea escribible (prueba real de escritura, compatible con Windows).
+- `restore_db` valida la cabecera `SQLite format 3\0` y `PRAGMA integrity_check`
+  antes de reemplazar la BD, y crea un respaldo automático previo para que la
+  operación sea reversible. `listar_backups` reporta nombre, ruta, fecha y tamaño.
+- `src-tauri/tests/backup.rs`: 4 tests obligatorios en verde con comportamiento
+  esperado y referencia operativa en comentarios.
+- `cargo test`: **155 passed; 0 failed; 1 ignored** (22 unitarios + 4 backup +
+  9 cálculos + 29 cesantía + 19 CFDI + 9 horas extra + 3 subsidio +
+  60 validación).
+- `docs/operacion.md`: sección "Backup y restore de la BD" con comandos,
+  ejemplo de `invoke` y reglas de validación.
+- Matriz de cumplimiento: fila "Backup/restore BD" → Cubierto; conteo
+  actualizado a 27 cubiertos / 40 filas.
+- CI: _pendiente de pegar el URL del run_.
