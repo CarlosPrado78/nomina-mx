@@ -3,6 +3,9 @@ import { invoke } from '@tauri-apps/api/core';
 export const api = {
   guardarEmpresa: (empresa: any) => invoke('guardar_empresa', { empresa }),
   obtenerEmpresa: () => invoke<any>('obtener_empresa'),
+  listarEmpresas: () => invoke<any[]>('listar_empresas'),
+  cambiarEmpresaActiva: (id: number) => invoke<void>('cambiar_empresa_activa', { id }),
+  crearEmpresa: (nueva: any) => invoke<any>('crear_empresa', { nueva }),
   guardarTrabajador: (trabajador: any) => invoke('guardar_trabajador', { t: trabajador }),
   listarTrabajadores: (empresaId: number) => invoke<any[]>('listar_trabajadores', { empresaId }),
   obtenerTrabajador: (id: number) => invoke<any>('obtener_trabajador', { id }),

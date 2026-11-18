@@ -1,20 +1,10 @@
-use serde::{Deserialize, Serialize};
+// C4 — La ficha de empresa mostrada/editada es siempre la activa.
+// El tipo `Empresa` y la resolución de la activa viven en `empresas.rs`.
+
+use crate::commands::empresas::{obtener_empresa_activa_pool, Empresa};
 use sqlx::SqlitePool;
 use tauri::AppHandle;
 use tauri::Manager;
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Empresa {
-    pub id: Option<i64>,
-    pub rfc: String,
-    pub razon_social: String,
-    pub regimen_fiscal: String,
-    pub cp: String,
-    pub estado_isn: String,
-    pub tasa_isn: f64,
-    pub prima_riesgo_trabajo: f64,
-    pub registro_patronal_imss: String,
-}
 
 fn db_url(app: &AppHandle) -> String {
     let dir = app.path().app_data_dir().unwrap();
@@ -52,12 +42,5 @@ pub async fn guardar_empresa(app: AppHandle, empresa: Empresa) -> Result<i64, St
 #[tauri::command]
 pub async fn obtener_empresa(app: AppHandle) -> Result<Option<Empresa>, String> {
     let p = pool(&app).await?;
-    let row = sqlx::query_as::<_, (i64, String, String, String, String, String, f64, f64, String)>(
-        "SELECT id, rfc, razon_social, regimen_fiscal, cp, estado_isn, tasa_isn, prima_riesgo_trabajo, registro_patronal_imss FROM empresas LIMIT 1",
-    )
-    .fetch_optional(&p).await.map_err(|e| e.to_string())?;
-    Ok(row.map(|r| Empresa {
-        id: Some(r.0), rfc: r.1, razon_social: r.2, regimen_fiscal: r.3, cp: r.4,
-        estado_isn: r.5, tasa_isn: r.6, prima_riesgo_trabajo: r.7, registro_patronal_imss: r.8,
-    }))
+    obtener_empresa_activa_pool(&p).await
 }

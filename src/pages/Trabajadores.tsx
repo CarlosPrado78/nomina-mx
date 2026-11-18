@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '../lib/tauri';
+import { useAppStore } from '../lib/store';
 import { validarCURP, validarRFC, validarNSS } from '../lib/validators';
 
 const schema = z.object({
@@ -32,12 +33,14 @@ export default function TrabajadoresPage() {
   const { register, handleSubmit, reset } = useForm({ resolver: zodResolver(schema), defaultValues: { empresa_id: 1, nombre: '', curp: '', rfc: '', nss: '', num_empleado: '', fecha_nacimiento: '', estado_civil: '', fecha_ingreso: '', tipo_contrato: '', departamento: '', puesto: '', salario_diario: 0, periodicidad_pago: 'mensual', jornada: '', horas_semanales: 40, infonavit_activo: false, infonavit_num_credito: '', infonavit_factor: 0, infonavit_tipo_descuento: 'CUOTA_FIJA_VSM' } });
   const [lista, setLista] = useState<any[]>([]);
   const [msg, setMsg] = useState('');
+  const reloadKey = useAppStore((s) => s.reloadKey);
 
   const cargar = async () => {
     try { setLista(await api.listarTrabajadores(1)); } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { cargar(); }, []);
+  // C4: recarga cuando cambia la empresa activa.
+  useEffect(() => { cargar(); }, [reloadKey]);
 
   const onSubmit = async (data: any) => {
     await api.guardarTrabajador(data);

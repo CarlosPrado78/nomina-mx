@@ -38,6 +38,12 @@ pub fn run() {
                         sql: include_str!("../migrations/0003_audit_log.sql"),
                         kind: tauri_plugin_sql::MigrationKind::Up,
                     },
+                    tauri_plugin_sql::Migration {
+                        version: 5,
+                        description: "C4: multi-empresa con seleccion persistida",
+                        sql: include_str!("../migrations/0004_multi_empresa.sql"),
+                        kind: tauri_plugin_sql::MigrationKind::Up,
+                    },
                 ])
                 .build(),
         )
@@ -54,6 +60,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::empresa::guardar_empresa,
             commands::empresa::obtener_empresa,
+            commands::empresas::listar_empresas,
+            commands::empresas::cambiar_empresa_activa,
+            commands::empresas::crear_empresa,
             commands::trabajador::guardar_trabajador,
             commands::trabajador::listar_trabajadores,
             commands::trabajador::obtener_trabajador,

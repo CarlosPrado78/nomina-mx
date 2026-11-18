@@ -1,11 +1,12 @@
 use crate::calc::{horas_extra, imss, infonavit, isn, isr, sar, sdi};
 use crate::calc::isr::TarifaBracket;
+use crate::commands::empresas::empresa_activa_pool;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use tauri::AppHandle;
 use tauri::Manager;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct ReciboCalculado {
     pub trabajador_id: i64,
     pub sueldo_bruto: f64,
@@ -28,6 +29,16 @@ pub struct ReciboCalculado {
     pub horas_extra_importe: f64,
     pub horas_extra_exento: f64,
     pub horas_extra_gravado: f64,
+}
+
+/// Vista mínima de un recibo para las consultas filtradas por empresa (C4).
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReciboResumen {
+    pub id: i64,
+    pub empresa_id: i64,
+    pub periodo_id: i64,
+    pub trabajador_id: i64,
+    pub neto: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -90,11 +101,17 @@ pub async fn calcular_recibo(
     horas_extra: Option<HorasExtraInput>,
 ) -> Result<ReciboCalculado, String> {
     let p = pool(&app).await?;
+    // C4: la empresa se resuelve en servidor; se ignora el valor del cliente
+    // y el trabajador debe pertenecer a esa empresa.
+    let empresa_id_activa = empresa_activa_pool(&p).await?;
+    let _ = empresa_id;
+
     // trabajador
     let trow = sqlx::query_as::<_, (i64, f64, String, i64, f64, String)>(
-        "SELECT id, salario_diario, periodicidad_pago, infonavit_activo, infonavit_factor, infonavit_tipo_descuento FROM trabajadores WHERE id=?",
+        "SELECT id, salario_diario, periodicidad_pago, infonavit_activo, infonavit_factor, infonavit_tipo_descuento FROM trabajadores WHERE id=? AND empresa_id=?",
     )
-    .bind(trabajador_id).fetch_one(&p).await.map_err(|e| e.to_string())?;
+    .bind(trabajador_id).bind(empresa_id_activa)
+    .fetch_one(&p).await.map_err(|e| format!("el trabajador no pertenece a la empresa activa: {}", e))?;
     let salario_diario = trow.1;
     let infonavit_activo = trow.3 != 0;
     let infonavit_factor = trow.4;
@@ -104,7 +121,7 @@ pub async fn calcular_recibo(
     let erow = sqlx::query_as::<_, (f64, f64, String)>(
         "SELECT prima_riesgo_trabajo, tasa_isn, estado_isn FROM empresas WHERE id=?",
     )
-    .bind(empresa_id).fetch_one(&p).await.map_err(|e| e.to_string())?;
+    .bind(empresa_id_activa).fetch_one(&p).await.map_err(|e| e.to_string())?;
     let prima_rt = erow.0;
     let tasa_isn = erow.1;
 
@@ -217,43 +234,74 @@ pub async fn calcular_recibo(
     })
 }
 
-#[tauri::command]
-pub async fn guardar_periodo(app: AppHandle, periodo: PeriodoNomina) -> Result<i64, String> {
-    let p = pool(&app).await?;
+/// Guarda un periodo en la empresa activa, ignorando `periodo.empresa_id`.
+pub async fn guardar_periodo_pool(p: &SqlitePool, periodo: &PeriodoNomina) -> Result<i64, String> {
+    let empresa_id = empresa_activa_pool(p).await?;
     let res = sqlx::query(
         "INSERT INTO periodos_nomina (empresa_id, tipo, fecha_inicio, fecha_fin, fecha_pago, estado, dias) VALUES (?,?,?,?,?,?,?)",
     )
-    .bind(periodo.empresa_id).bind(&periodo.tipo).bind(&periodo.fecha_inicio)
+    .bind(empresa_id).bind(&periodo.tipo).bind(&periodo.fecha_inicio)
     .bind(&periodo.fecha_fin).bind(&periodo.fecha_pago).bind(&periodo.estado).bind(periodo.dias)
-    .execute(&p).await.map_err(|e| e.to_string())?;
+    .execute(p).await.map_err(|e| e.to_string())?;
     Ok(res.last_insert_rowid())
 }
 
-#[tauri::command]
-pub async fn listar_periodos(app: AppHandle, empresa_id: i64) -> Result<Vec<PeriodoNomina>, String> {
-    let p = pool(&app).await?;
+/// Lista solo los periodos de la empresa activa.
+pub async fn listar_periodos_pool(p: &SqlitePool) -> Result<Vec<PeriodoNomina>, String> {
+    let empresa_id = empresa_activa_pool(p).await?;
     let rows = sqlx::query_as::<_, (i64, i64, String, String, String, String, String, i64)>(
-        "SELECT id, empresa_id, tipo, fecha_inicio, fecha_fin, fecha_pago, estado, dias FROM periodos_nomina WHERE empresa_id=?",
+        "SELECT id, empresa_id, tipo, fecha_inicio, fecha_fin, fecha_pago, estado, dias FROM periodos_nomina WHERE empresa_id=? ORDER BY id",
     )
-    .bind(empresa_id).fetch_all(&p).await.map_err(|e| e.to_string())?;
+    .bind(empresa_id).fetch_all(p).await.map_err(|e| e.to_string())?;
     Ok(rows.into_iter().map(|r| PeriodoNomina {
         id: Some(r.0), empresa_id: r.1, tipo: r.2, fecha_inicio: r.3, fecha_fin: r.4,
         fecha_pago: r.5, estado: r.6, dias: r.7,
     }).collect())
 }
 
-#[tauri::command]
-pub async fn guardar_recibo(app: AppHandle, periodo_id: i64, r: ReciboCalculado) -> Result<i64, String> {
-    let p = pool(&app).await?;
+/// Guarda un recibo sellando `empresa_id` con la empresa activa.
+pub async fn guardar_recibo_pool(p: &SqlitePool, periodo_id: i64, r: &ReciboCalculado) -> Result<i64, String> {
+    let empresa_id = empresa_activa_pool(p).await?;
     let res = sqlx::query(
-        "INSERT INTO recibos (periodo_id, trabajador_id, sueldo_bruto, isr, imss_obrero, infonavit_desc, otras_deducciones, total_percepciones, total_deducciones, neto, cuota_patronal_imss, aportacion_infonavit, aportacion_sar, isn, costo_total_patron, horas_extra_dobles, horas_extra_triples, horas_extra_importe, horas_extra_exento, horas_extra_gravado) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO recibos (empresa_id, periodo_id, trabajador_id, sueldo_bruto, isr, imss_obrero, infonavit_desc, otras_deducciones, total_percepciones, total_deducciones, neto, cuota_patronal_imss, aportacion_infonavit, aportacion_sar, isn, costo_total_patron, horas_extra_dobles, horas_extra_triples, horas_extra_importe, horas_extra_exento, horas_extra_gravado) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
     )
-    .bind(periodo_id).bind(r.trabajador_id).bind(r.sueldo_bruto).bind(r.isr).bind(r.imss_obrero)
+    .bind(empresa_id).bind(periodo_id).bind(r.trabajador_id).bind(r.sueldo_bruto).bind(r.isr).bind(r.imss_obrero)
     .bind(r.infonavit_desc).bind(r.otras_deducciones).bind(r.total_percepciones).bind(r.total_deducciones)
     .bind(r.neto).bind(r.cuota_patronal_imss).bind(r.aportacion_infonavit).bind(r.aportacion_sar)
     .bind(r.isn).bind(r.costo_total_patron)
     .bind(r.horas_extra_dobles).bind(r.horas_extra_triples).bind(r.horas_extra_importe)
     .bind(r.horas_extra_exento).bind(r.horas_extra_gravado)
-    .execute(&p).await.map_err(|e| e.to_string())?;
+    .execute(p).await.map_err(|e| e.to_string())?;
     Ok(res.last_insert_rowid())
+}
+
+/// Lista solo los recibos de la empresa activa (regla C4).
+pub async fn listar_recibos_pool(p: &SqlitePool) -> Result<Vec<ReciboResumen>, String> {
+    let empresa_id = empresa_activa_pool(p).await?;
+    let rows = sqlx::query_as::<_, (i64, i64, i64, i64, f64)>(
+        "SELECT id, empresa_id, periodo_id, trabajador_id, COALESCE(neto,0) FROM recibos WHERE empresa_id=? ORDER BY id",
+    )
+    .bind(empresa_id).fetch_all(p).await.map_err(|e| e.to_string())?;
+    Ok(rows.into_iter().map(|r| ReciboResumen {
+        id: r.0, empresa_id: r.1, periodo_id: r.2, trabajador_id: r.3, neto: r.4,
+    }).collect())
+}
+
+#[tauri::command]
+pub async fn guardar_periodo(app: AppHandle, periodo: PeriodoNomina) -> Result<i64, String> {
+    let p = pool(&app).await?;
+    guardar_periodo_pool(&p, &periodo).await
+}
+
+#[tauri::command]
+pub async fn listar_periodos(app: AppHandle, empresa_id: i64) -> Result<Vec<PeriodoNomina>, String> {
+    let _ = empresa_id; // se resuelve en servidor (regla C4)
+    let p = pool(&app).await?;
+    listar_periodos_pool(&p).await
+}
+
+#[tauri::command]
+pub async fn guardar_recibo(app: AppHandle, periodo_id: i64, r: ReciboCalculado) -> Result<i64, String> {
+    let p = pool(&app).await?;
+    guardar_recibo_pool(&p, periodo_id, &r).await
 }

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '../lib/tauri';
+import { useAppStore } from '../lib/store';
 
 const schema = z.object({
   rfc: z.string().min(12),
@@ -18,10 +19,12 @@ const schema = z.object({
 export default function EmpresaPage() {
   const { register, handleSubmit, reset } = useForm({ resolver: zodResolver(schema) });
   const [msg, setMsg] = useState('');
+  const reloadKey = useAppStore((s) => s.reloadKey);
 
+  // C4: obtener_empresa resuelve la activa en el backend.
   useEffect(() => {
     api.obtenerEmpresa().then((e: any) => { if (e) reset(e); }).catch(console.error);
-  }, [reset]);
+  }, [reset, reloadKey]);
 
   const onSubmit = async (data: any) => {
     await api.guardarEmpresa(data);

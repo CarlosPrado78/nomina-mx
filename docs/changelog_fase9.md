@@ -264,3 +264,38 @@ Fuentes oficiales consultadas:
   con `macos-latest` y `windows-latest` en verde; el `Frontend build` compiló
   `Auditoria.tsx` sin errores de TypeScript, `cargo test` en Windows reportó
   **160 verdes + 1 ignorado** y `cargo tauri build` generó el `.msi`.
+
+---
+
+## 2026-11-18 — BLOQUE C / ÍTEM C4: Multi-empresa
+
+**Estado:** COMPLETADO.
+
+- `migrations/0004_multi_empresa.sql` registrada como **versión 5** en `lib.rs`:
+  tabla `config(clave, valor)` con `empresa_activa`, índice
+  `ux_empresas_rfc` (RFC único por empresa), `empresa_id NOT NULL` en
+  `recibos`, `incapacidades` y `vacaciones`, **Empresa Default** automática
+  (`id=1`, RFC `XAXX010101000`) y `UPDATE` masivo de las cinco tablas de datos
+  a `empresa_id=1`. Los triggers de auditoría de las tres tablas nuevas se
+  recrean para registrar `empresa_id`.
+- `commands/empresas.rs`: `listar_empresas`, `cambiar_empresa_activa` y
+  `crear_empresa`, más los helpers de pool `empresa_activa_pool`,
+  `listar_empresas_pool`, `obtener_empresa_activa_pool`,
+  `cambiar_empresa_activa_pool` y `crear_empresa_pool`. El usuario de auditoría
+  de C3 no se ve afectado.
+- Refactor de consultas: `guardar_trabajador` ignora el `empresa_id` del
+  formulario; `listar/obtener_trabajador`, `guardar/listar_periodos`,
+  `guardar/listar_recibos`, `reporte_cuotas_imss` y `obtener_empresa` resuelven
+  la empresa activa **en servidor**. `guardar_recibo` sella `empresa_id`.
+- UI: `src/pages/EmpresaSelector.tsx` en el header, con alta de empresas y
+  persistencia en `config`. Al cambiar, `reloadKey` de Zustand recarga
+  `Trabajadores.tsx`, `Nomina.tsx`, `Reportes.tsx` y `Empresa.tsx`.
+- `src-tauri/tests/multi_empresa.rs`: 5 tests obligatorios en verde (aislamiento
+  de trabajadores y recibos, persistencia, RFC único y migración con datos
+  existentes). Los 160 tests previos siguen verdes.
+- `cargo test`: **165 passed; 0 failed; 1 ignored**.
+- `docs/operacion.md`: sección "Multi-empresa" completa con esquema, tabla de
+  comandos, ejemplo de `invoke`, UI y evidencia.
+- Matriz de cumplimiento: fila "Multi-empresa" → Cubierto; conteo actualizado
+  a 29 cubiertos / 40 filas.
+- CI: _pendiente de pegar el URL del run_.

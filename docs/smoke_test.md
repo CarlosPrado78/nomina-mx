@@ -97,6 +97,10 @@ con `macos-latest` y `windows-latest` en verde.
 `src/pages/Auditoria.tsx` en el paso `Frontend build` y la UI quedó enlazada en
 `/auditoria`.
 
+### Verificación del ÍTEM C4 (multi-empresa) en Windows
+
+Run: _pendiente de pegar el URL del run de C4_.
+
 ## PDF de recibo — "José Pérez Núñez"
 
 Se generó el PDF de evidencia `docs/evidencia/recibo_jose_perez.pdf` con el texto acentuado

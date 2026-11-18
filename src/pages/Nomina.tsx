@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/tauri';
+import { useAppStore } from '../lib/store';
 
 export default function NominaPage() {
   const [trabajadores, setTrabajadores] = useState<any[]>([]);
@@ -16,8 +17,15 @@ export default function NominaPage() {
   const [semanasExtra, setSemanasExtra] = useState(1);
   const [jornadaExtra, setJornadaExtra] = useState('diurna');
   const [salarioMinimo, setSalarioMinimo] = useState(false);
+  const reloadKey = useAppStore((s) => s.reloadKey);
 
-  useEffect(() => { api.listarTrabajadores(1).then(setTrabajadores).catch(console.error); }, []);
+  // C4: al cambiar de empresa se recargan los trabajadores y se limpia la selección.
+  useEffect(() => {
+    setSeleccionados([]);
+    setResultados([]);
+    setPeriodoId(null);
+    api.listarTrabajadores(1).then(setTrabajadores).catch(console.error);
+  }, [reloadKey]);
 
   const crearPeriodo = async () => {
     const id = await api.guardarPeriodo({

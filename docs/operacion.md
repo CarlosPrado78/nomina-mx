@@ -159,8 +159,73 @@ filtros por tabla, operación, usuario y rango de fechas (UTC).
 `audit_log_no_se_puede_actualizar` y `listar_auditoria_filtra_por_tabla`.
 
 ## Multi-empresa
-Estado: **Parcial**. El esquema tiene `empresas` y `trabajadores.empresa_id`, pero la UI
-fija `empresa_id = 1` en `Trabajadores.tsx` y `Nomina.tsx`. Selector de empresa: **Pendiente para v1.1**.
+
+Estado: **Cubierto** (ÍTEM C4). Implementado en
+`src-tauri/migrations/0004_multi_empresa.sql`, `src-tauri/src/commands/empresas.rs`
+y `src/pages/EmpresaSelector.tsx`.
+Referencias: LISR art. 79 fracc. III (requisitos de deducción de nómina) y
+CFF art. 27 (contabilidad separada por establecimiento).
+
+> Nota de versión: el archivo se llama `0004_multi_empresa.sql` y se registra
+> como migración **5** en `lib.rs` (1 init, 2 seed fiscal, 3 horas extra,
+> 4 auditoría, 5 multi-empresa).
+
+### Esquema y migración
+
+- `config(clave TEXT PRIMARY KEY, valor TEXT NOT NULL)` guarda la selección en
+  `clave = 'empresa_activa'` con el ID como texto.
+- `CREATE UNIQUE INDEX ux_empresas_rfc ON empresas(rfc)`: RFC único por empresa,
+  reforzado en la base de datos.
+- `empresa_id INTEGER NOT NULL DEFAULT 1` agregado a `recibos`,
+  `incapacidades` y `vacaciones`. `trabajadores` y `periodos_nomina` ya lo
+  tenían desde `0001_init.sql`.
+- Se crea automáticamente la **Empresa Default** (`id = 1`,
+  RFC `XAXX010101000`, razón social `Empresa Default`) si no existe.
+- Todos los registros preexistentes se reasignan a `empresa_id = 1` mediante
+  `UPDATE` explícito en las cinco tablas de datos.
+- Los triggers de auditoría de `recibos`, `incapacidades` y `vacaciones` se
+  recrean para incluir `empresa_id` en el snapshot JSON.
+
+### Regla de negocio: la empresa activa se resuelve en servidor
+
+`empresa_activa_pool()` lee `config.empresa_activa` (fallback a `1`). Ninguna
+consulta confía en el `empresa_id` que envía el cliente:
+
+| Comando | Comportamiento C4 |
+| --- | --- |
+| `listar_empresas` | Lista todas y marca `activa: true` en la seleccionada. |
+| `cambiar_empresa_activa(id)` | Valida que exista y persiste el ID en `config`. |
+| `crear_empresa(nueva)` | Valida RFC único y devuelve la empresa creada. |
+| `guardar_trabajador` | Ignora `t.empresa_id`; sella la empresa activa (INSERT y UPDATE con `AND empresa_id=?`). |
+| `listar_trabajadores` / `obtener_trabajador` | Filtran por la empresa activa. |
+| `guardar_periodo` | Ignora `periodo.empresa_id`; sella la empresa activa. |
+| `listar_periodos` / `listar_recibos` | Filtran por la empresa activa. |
+| `guardar_recibo` | Escribe `empresa_id` con la activa. |
+| `reporte_cuotas_imss` | Filtra `periodos_nomina` **y** `recibos` por la activa. |
+| `obtener_empresa` | Devuelve la ficha de la empresa activa. |
+
+Ejemplo desde el frontend:
+
+```ts
+await invoke('listar_empresas');            // [{ id, rfc, razon_social, activa, ... }]
+await invoke('cambiar_empresa_activa', { id: 2 });
+await invoke('crear_empresa', { nueva: { rfc: 'BBBB010101ABC', razon_social: 'Empresa Dos' } });
+```
+
+### UI
+
+`src/pages/EmpresaSelector.tsx` se muestra en el header. Al cambiar de empresa
+llama a `cambiar_empresa_activa` e incrementa `reloadKey` en Zustand
+(`src/lib/store.ts`); `Trabajadores.tsx`, `Nomina.tsx`, `Reportes.tsx` y
+`Empresa.tsx` recargan sus datos en consecuencia. El alta de empresa también
+permite crear y activar una empresa nueva sin recurrir a SQL.
+
+### Evidencia
+
+`src-tauri/tests/multi_empresa.rs`: `multi_empresa_aislamiento_trabajadores`,
+`multi_empresa_aislamiento_recibos`, `cambiar_empresa_activa_persiste`,
+`crear_empresa_valida_rfc_unico` y
+`migracion_0004_asigna_default_a_registros_existentes`.
 
 ## Recálculo retroactivo de SBC
 Estado: **Pendiente para v1.1**. No existe comando que recalcule `sdi`/SBC de periodos

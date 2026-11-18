@@ -7,6 +7,7 @@ import FiniquitosPage from './pages/Finiquitos';
 import ReportesPage from './pages/Reportes';
 import ConfigPage from './pages/Configuracion';
 import AuditoriaPage from './pages/Auditoria';
+import EmpresaSelector from './pages/EmpresaSelector';
 import { api } from './lib/tauri';
 
 export default function App() {
@@ -18,7 +19,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow p-4 flex gap-4">
+      <nav className="bg-white shadow p-4 flex flex-wrap items-center gap-4">
         <NavLink to="/" className="font-bold">NominaMX</NavLink>
         <NavLink to="/empresa">Empresa</NavLink>
         <NavLink to="/trabajadores">Trabajadores</NavLink>
@@ -27,6 +28,7 @@ export default function App() {
         <NavLink to="/reportes">Reportes</NavLink>
         <NavLink to="/config">Configuracion</NavLink>
         <NavLink to="/auditoria">Auditoría</NavLink>
+        <EmpresaSelector />
       </nav>
       <main className="p-6">
         <Routes>
