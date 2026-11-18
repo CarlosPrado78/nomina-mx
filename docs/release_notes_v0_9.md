@@ -1,8 +1,9 @@
 # NominaMX v0.9 — Notas de versión (borrador)
 
-> **Pendiente: verificación visual macOS + Windows.** Este documento es un
-> borrador. No se ha creado el tag `v0.9.0` ni la GitHub Release. No se inicia
-> el piloto con contadores hasta cerrar la verificación en Windows.
+> **Pendiente: verificación visual macOS + Windows antes de publicar.** Este
+> documento es un borrador. No se ha creado el tag `v0.9.0` ni la GitHub
+> Release. No se inicia el piloto con contadores hasta cerrar la verificación
+> en macOS y Windows.
 
 ## Novedades
 
@@ -23,13 +24,14 @@
   copia previa automática (comandos disponibles via IPC; botón visible en v1.0).
 - **Multiempresa** y selector de empresa en el encabezado.
 - **PDF de recibo** con acentos (`José Pérez Núñez`) generado con
-  `@react-pdf/renderer`.
+  `@react-pdf/renderer` y **botón Descargar PDF** enlazado en cada renglón de la
+  tabla de resultados de nómina.
 
 ## Limitaciones conocidas
 
-- El **botón de descarga de PDF no está enlazado** en la pantalla de nómina.
-  La función `descargarRecibo` existe en `src/components/ReciboPDF.tsx` pero la
-  UI aún no la llama; se planea para v1.0.
+- **Sin firma de código:** macOS muestra Gatekeeper y Windows muestra
+  SmartScreen la primera vez; hay que usar "Abrir de todas formas" / "Ejecutar
+  de todas formas". La firma está planeada para después del piloto.
 - **Timbrado real con PAC y CSD no implementado.** Los comprobantes son de
   muestra y no tienen validez fiscal.
 - La **prestación económica por incapacidad** (subsidio IMSS/pago patronal) no

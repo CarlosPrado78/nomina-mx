@@ -455,3 +455,24 @@ Fuentes oficiales consultadas:
 - `docs/casos_validacion_contable.md`: D7 registrado como 'pendiente de
   identificar contador'.
 - Sin tag `v0.9.0`, sin Release y sin piloto hasta cerrar Windows.
+
+---
+
+## 2026-11-18 — P0: botón de PDF y cierre de documentación de release
+
+- **P0-A:** botón **Descargar PDF** enlazado en la tabla de resultados de
+  `src/pages/Nomina.tsx` mediante el nuevo componente `BotonDescargarRecibo` en
+  `src/components/ReciboPDF.tsx`. El recibo mostrado incluye el nombre del
+  trabajador para que el PDF contenga `José Pérez Núñez` con acentos.
+  Se agregó `src/components/ReciboPDF.test.tsx` (3 tests: botón en el DOM,
+  llamada al hacer click, nombre acentuado y filename del PDF). Frontend:
+  9 tests en verde; `tsc --noEmit` OK.
+- **P0-B:** `docs/smoke_test.md` con tabla de opciones Windows y estado ⏳
+  Pendiente; `docs/release_notes_v0_9.md` borrador con features, limitaciones
+  (sin firma de código, sin timbrado real), requisitos y avisos de
+  Gatekeeper/SmartScreen; `docs/casos_validacion_contable.md` con D7 pendiente
+  de contador; `docs/manual_usuario.md` con instrucciones de descarga del PDF.
+- **P0-C:** verificación macOS ⏳ pendiente de ejecución por el desarrollador
+  (usuario nuevo, 30-45 min) mediante `scripts/verificacion_macos.sh`.
+- **P1:** Windows con opciones documentadas y decisión pendiente del
+  desarrollador. Sin tag `v0.9.0` ni piloto.

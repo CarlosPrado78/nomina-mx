@@ -130,11 +130,20 @@ UMA y el subsidio de enero, aunque lo calcule en noviembre.
 
 ### PDF del recibo
 
-La aplicación cuenta con el generador de PDF con acentos (`José Pérez Núñez`),
-pero en esta versión **el botón de descarga aún no está enlazado en la pantalla
-de nómina**. Mientras tanto, el PDF de evidencia se encuentra en
-`docs/evidencia/recibo_jose_perez.pdf`. Este punto se reporta como bloqueante
-específico en `docs/smoke_test.md`.
+En la tabla de resultados de **Nomina**, cada renglón tiene un botón
+**Descargar PDF** en la última columna. Para exportar un recibo:
+
+1. Calcule la nómina como se describió arriba.
+2. En el renglón del trabajador, haga clic en **Descargar PDF**.
+3. Se guardará un archivo `recibo_<id>.pdf` (por ejemplo,
+   `recibo_7.pdf`) en su carpeta de descargas.
+4. Ábralo en Preview (macOS) o Edge (Windows) y compruebe que el nombre
+   `José Pérez Núñez` y la palabra `Gratificación`, si aparece, conserven los
+   acentos.
+
+El nombre del trabajador se toma del alta correspondiente; si no se muestra,
+verifique que el campo **Nombre** esté lleno en **Trabajadores** y vuelva a
+calcular la nómina.
 
 ## 5. Importación de trabajadores desde CSV
 

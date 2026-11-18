@@ -215,10 +215,13 @@ contienen capturas porque no hubo entorno limpio utilizable.
 
 ### Verificación visual — macOS (usuario nuevo)
 
-**Estado: ❌ BLOQUEANTE — pendiente de ejecución por el desarrollador.**
+**Estado: BLOQUEANTE — ⏳ pendiente de ejecución por el desarrollador
+(usuario nuevo macOS, 30-45 min).**
 El bloqueo anterior (`sudo: a password is required`) ya no es el problema de
 fondo: se generó un script que el desarrollador debe ejecutar **dentro** de la
 cuenta nueva, donde sí podrá crear y usar el usuario sin depender del agente.
+El bloqueante funcional del botón de PDF (P0-A) ya está resuelto y cubierto por
+tests; falta la ejecución humana del flujo.
 
 Preparación lista:
 
@@ -244,7 +247,7 @@ ejecute el script y se completen las capturas humanas.
 | Crear empresa RFC `XAXX010101000`, régimen 601 | ⏳ | `macos_02_*` | Flujo manual con clicks humanos |
 | Alta de José Pérez Núñez | ⏳ | `macos_02_trabajador.png` | Flujo manual |
 | Periodo quincenal enero 2026 y recibo | ⏳ | `macos_03_recibo.png` | Flujo manual |
-| Exportar PDF y revisar acentos en Preview | ⏳ | `macos_04_pdf_acentos.png` | Flujo manual; además, el botón de descarga de PDF no está enlazado en la UI (`descargarRecibo` existe en `src/components/ReciboPDF.tsx` pero no se usa) |
+| Click en **Descargar PDF** → archivo se descarga → abrir en Preview → verificar acentos | ⏳ | `macos_04_pdf_acentos.png` | Botón enlazado en P0-A (`src/pages/Nomina.tsx`); verificar `José Pérez Núñez` |
 | Captura de la ruta de la BD | ⏳ | `macos_05_bd_ruta.png` | Flujo manual |
 
 Nota honesta: la prueba se hará con un usuario nuevo en la Mac del
@@ -285,6 +288,6 @@ iniciar piloto con contadores. No se crea el tag `v0.9.0`.
 | Build .dmg macOS | OK |
 | Ejecución app macOS | OK (sin errores en log) |
 | Build/ejecución .msi Windows | OK (CI windows-latest, run 44016157633) |
-| PDF acentos en Preview/Edge | Archivo generado; revisión visual pendiente |
+| PDF acentos en Preview/Edge | Botón enlazado en UI; revisión visual pendiente |
 | CFDI timbrado sandbox (UUID) | Pendiente |
-| Verificación visual end-to-end en entorno limpio | BLOQUEANTE |
+| Verificación visual end-to-end en entorno limpio | ⏳ macOS pendiente (P0-C); Windows pendiente (decisión de entorno) |

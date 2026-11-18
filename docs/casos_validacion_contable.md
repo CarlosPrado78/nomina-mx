@@ -269,9 +269,10 @@ debe registrar UMA 113.14 y subsidio 536.21.
 
 ## D7 — Revisión con contador de confianza
 
-**Estado: pendiente de identificar contador.** Los 10 casos ya están listos con
-cifras esperadas calculadas a partir de las fórmulas del proyecto, pero aún no
-hay un contador asignado para revisarlos y firmar el resultado global.
+**Estado: Pendiente de identificar contador para validación.** El desarrollador
+debe asignar un contador de confianza para ejecutar los 10 casos y firmar la
+validación. Los casos ya están listos con cifras esperadas calculadas a partir
+de las fórmulas del proyecto; solo falta la revisión humana.
 
 Cuando se identifique, registrar aquí: nombre del contador, despacho, fecha de
 revisión y número de casos conformes. Esta revisión es prerrequisito para el

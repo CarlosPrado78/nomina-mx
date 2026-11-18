@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/tauri';
 import { useAppStore } from '../lib/store';
+import { BotonDescargarRecibo } from '../components/ReciboPDF';
 
 export default function NominaPage() {
   const [trabajadores, setTrabajadores] = useState<any[]>([]);
@@ -45,8 +46,11 @@ export default function NominaPage() {
         salario_minimo: salarioMinimo,
       } : undefined;
       const r = await api.calcularRecibo(id, 1, dias, tipo, fechaPago || '2026-02-28', horasExtraInput);
-      out.push(r);
       if (periodoId) await api.guardarRecibo(periodoId, r);
+      // El nombre no forma parte del payload que se guarda en la BD; se agrega
+      // solo a la copia que se muestra y que se envía al generador de PDF.
+      const nombre = trabajadores.find((t: any) => t.id === id)?.nombre ?? '';
+      out.push({ ...r, trabajador_nombre: nombre });
     }
     setResultados(out);
   };
@@ -100,7 +104,7 @@ export default function NominaPage() {
         <table className="w-full border mt-6 text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th>Trab</th><th>Percepciones</th><th>Hras dobles</th><th>Hras triples</th><th>HE exento</th><th>ISR</th><th>IMSS</th><th>INFONAVIT</th><th>Neto</th><th>Costo patronal</th>
+              <th>Trab</th><th>Percepciones</th><th>Hras dobles</th><th>Hras triples</th><th>HE exento</th><th>ISR</th><th>IMSS</th><th>INFONAVIT</th><th>Neto</th><th>Costo patronal</th><th>PDF</th>
             </tr>
           </thead>
           <tbody>
@@ -116,6 +120,7 @@ export default function NominaPage() {
                 <td className="p-1">{r.infonavit_desc.toFixed(2)}</td>
                 <td className="p-1">{r.neto.toFixed(2)}</td>
                 <td className="p-1">{r.costo_total_patron.toFixed(2)}</td>
+                <td className="p-1"><BotonDescargarRecibo recibo={r} /></td>
               </tr>
             ))}
           </tbody>
