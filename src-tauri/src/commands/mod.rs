@@ -1,3 +1,4 @@
+pub mod auditoria;
 pub mod backup;
 pub mod empresa;
 pub mod trabajador;

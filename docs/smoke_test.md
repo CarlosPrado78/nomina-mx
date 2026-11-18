@@ -87,6 +87,10 @@ Run: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44242695969 — amb
 `cargo test` en `windows-latest`: 22 + 9 + 29 + 19 + 9 (horas extra) + 3 + 60 = **151 verdes, 1 ignorado**.
 El XML con `TipoPercepcion="019"` y dos nodos `HorasExtra` valida contra el XSD local en ambos sistemas.
 
+### Verificación del ÍTEM C3 (log de auditoría) en Windows
+
+Run: _pendiente de pegar el URL del run de C3_.
+
 ## PDF de recibo — "José Pérez Núñez"
 
 Se generó el PDF de evidencia `docs/evidencia/recibo_jose_perez.pdf` con el texto acentuado

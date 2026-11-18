@@ -229,3 +229,35 @@ Fuentes oficiales consultadas:
 - CI: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44247615289
   con `macos-latest` y `windows-latest` en verde; en Windows `cargo test`
   reportó **155 verdes + 1 ignorado** y `cargo tauri build` generó el `.msi`.
+
+---
+
+## 2026-11-18 — BLOQUE C / ÍTEM C3: Log de auditoría
+
+**Estado:** COMPLETADO.
+
+- `migrations/0003_audit_log.sql`: tabla `audit_log` con `id, tabla, operacion,
+  registro_id, antes_json, despues_json, usuario, timestamp` (`CURRENT_TIMESTAMP`
+  en UTC) y tabla `audit_sesion` para el usuario activo. Registrada como
+  **versión 4** en `lib.rs` porque la versión 3 ya la ocupa horas extra.
+- 15 triggers: INSERT/UPDATE/DELETE en `trabajadores`, `recibos`,
+  `periodos_nomina`, `incapacidades` y `vacaciones`, con snapshot JSON completo
+  (`json_object()` de SQLite) antes y después de cada cambio.
+- Inmutabilidad: `audit_log_no_update` y `audit_log_no_delete` usan
+  `RAISE(ABORT, ...)`. No hay `DELETE` ni `UPDATE` permitidos en la tabla.
+- Usuario: `NOMINA_USUARIO` → `~/.nomina-mx/config.json` → `"system"`.
+  `configurar_usuario_auditoria` lo fija al arrancar la app y `listar_auditoria`
+  lo refresca en cada consulta. Los JSON se normalizan con `serde_json`.
+- `commands/auditoria.rs`: `listar_auditoria` con filtros por tabla, operación,
+  usuario, rango de fechas UTC y paginación (`limit`/`offset`).
+- UI: `src/pages/Auditoria.tsx`, tabla paginada de 10 filas con los filtros
+  anteriores, enlazada en el header y en el router de `App.tsx`.
+- `src-tauri/tests/auditoria.rs`: 5 tests obligatorios en verde, con los cuatro
+  migraciones reales aplicadas y usuario de sesión controlado.
+- `cargo test`: **160 passed; 0 failed; 1 ignored**.
+- `docs/operacion.md`: sección "Log de auditoría (quién cambió qué)" completa,
+  con esquema, triggers, resolución de usuario, ejemplo de `invoke`, consulta
+  SQL y evidencia.
+- Matriz de cumplimiento: fila "Log de auditoría" → Cubierto; conteo actualizado
+  a 28 cubiertos / 40 filas.
+- CI: _pendiente de pegar el URL del run_.

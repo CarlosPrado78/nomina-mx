@@ -29,6 +29,15 @@ pub fn run() {
                         sql: include_str!("../migrations/0003_horas_extra.sql"),
                         kind: tauri_plugin_sql::MigrationKind::Up,
                     },
+                    tauri_plugin_sql::Migration {
+                        // El archivo se llama 0003_audit_log.sql por la
+                        // definición del índice, pero la versión 3 ya está
+                        // ocupada por horas extra.
+                        version: 4,
+                        description: "C3: log de auditoria inmutable",
+                        sql: include_str!("../migrations/0003_audit_log.sql"),
+                        kind: tauri_plugin_sql::MigrationKind::Up,
+                    },
                 ])
                 .build(),
         )
@@ -62,6 +71,8 @@ pub fn run() {
             commands::backup::backup_db,
             commands::backup::restore_db,
             commands::backup::listar_backups,
+            commands::auditoria::listar_auditoria,
+            commands::auditoria::configurar_usuario_auditoria,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

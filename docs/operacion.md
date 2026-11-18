@@ -71,8 +71,92 @@ const respaldoPrevio = await invoke<string>('restore_db', {
   `restore_rechaza_archivo_corrupto` y `backup_no_sobrescribe`.
 
 ## Log de auditoría (quién cambió qué)
-Estado: **Pendiente para v1.1**. No existe tabla `audit_log` ni registro de usuario.
-Los comandos actuales no registran autoría ni timestamp de cambio.
+
+Estado: **Cubierto** (ÍTEM C3). Implementado en
+`src-tauri/src/commands/auditoria.rs` y `migrations/0003_audit_log.sql`.
+Referencias: CFF art. 28 (conservación de información y registros) y LSS art. 15
+(registro de movimientos afiliatorios).
+
+> Nota de versión: el archivo se llama `0003_audit_log.sql` por la definición
+> del índice, pero se registra como migración **4** en `lib.rs` porque la
+> versión 3 ya está ocupada por `0003_horas_extra.sql`.
+
+### Esquema
+
+`audit_log(id, tabla, operacion, registro_id, antes_json, despues_json, usuario, timestamp)`.
+`timestamp` usa `CURRENT_TIMESTAMP` de SQLite, que es **UTC**. Los JSON se
+construyen con `json_object()` en los triggers y se normalizan con `serde_json`
+antes de devolverse al frontend.
+
+Hay triggers `AFTER INSERT`, `AFTER UPDATE` y `AFTER DELETE` en:
+`trabajadores`, `recibos`, `periodos_nomina`, `incapacidades` y `vacaciones`.
+Cada uno guarda el snapshot completo del registro antes y después del cambio.
+
+### Usuario de la sesión
+
+Se resuelve en este orden: variable de entorno `NOMINA_USUARIO` → clave
+`NOMINA_USUARIO` o `usuario` en `~/.nomina-mx/config.json` (Windows:
+`%APPDATA%\.nomina-mx\config.json`) → `"system"`. El comando
+`configurar_usuario_auditoria` sincroniza ese valor apenas arranca la app y
+`listar_auditoria` lo refresca en cada consulta. Los triggers leen el valor de
+la tabla `audit_sesion`.
+
+### Comando y filtros
+
+```ts
+import { invoke } from '@tauri-apps/api/core';
+
+interface FiltrosAuditoria {
+  tabla?: string;
+  operacion?: string;
+  usuario?: string;
+  fecha_desde?: string; // YYYY-MM-DD, UTC
+  fecha_hasta?: string; // YYYY-MM-DD, UTC
+  limit?: number;
+  offset?: number;
+}
+
+await invoke('configurar_usuario_auditoria');
+
+const registros = await invoke('listar_auditoria', {
+  filtros: {
+    tabla: 'trabajadores',
+    operacion: 'UPDATE',
+    fecha_desde: '2026-11-01',
+    fecha_hasta: '2026-11-30',
+    limit: 10,
+    offset: 0,
+  },
+});
+```
+
+### Inmutabilidad
+
+`audit_log` solo admite `INSERT`. Los triggers `audit_log_no_update` y
+`audit_log_no_delete` lanzan `RAISE(ABORT, 'audit_log es inmutable...')` ante
+cualquier `UPDATE` o `DELETE`. El test `audit_log_no_se_puede_actualizar`
+verifica ambos rechazos y que el número de filas no cambia.
+
+### Consulta SQL de ejemplo
+
+```sql
+SELECT timestamp, tabla, operacion, registro_id, usuario, antes_json, despues_json
+FROM audit_log
+WHERE tabla = 'trabajadores'
+  AND date(timestamp) BETWEEN '2026-11-01' AND '2026-11-30'
+ORDER BY id DESC
+LIMIT 10;
+```
+
+La UI `src/pages/Auditoria.tsx` muestra esta consulta en una tabla paginada con
+filtros por tabla, operación, usuario y rango de fechas (UTC).
+
+### Evidencia
+
+`src-tauri/tests/auditoria.rs`: `trigger_insert_trabajador_crea_audit_log`,
+`trigger_update_trabajador_guarda_antes_y_despues`,
+`trigger_delete_trabajador_guarda_registro`,
+`audit_log_no_se_puede_actualizar` y `listar_auditoria_filtra_por_tabla`.
 
 ## Multi-empresa
 Estado: **Parcial**. El esquema tiene `empresas` y `trabajadores.empresa_id`, pero la UI

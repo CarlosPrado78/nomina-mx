@@ -19,4 +19,6 @@ export const api = {
   listarEstadosIsn: () => invoke<any[]>('listar_estados_isn'),
   generarCfdi: (req: any) => invoke<any>('generar_cfdi', { req }),
   reporteCuotasImss: (empresaId: number) => invoke<any[]>('reporte_cuotas_imss', { empresaId }),
+  listarAuditoria: (filtros: any) => invoke<any[]>('listar_auditoria', { filtros }),
+  configurarUsuarioAuditoria: () => invoke<string>('configurar_usuario_auditoria'),
 };
