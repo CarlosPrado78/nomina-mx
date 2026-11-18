@@ -30,6 +30,37 @@ Si la aplicación no abre, reinicie la computadora e intente de nuevo. Si vuelve
 a fallar, reporte el error con una captura (consulte el apartado de soporte en
 `docs/release_notes_v0_9.md`, cuando exista).
 
+## 1.1 Verificación post-instalación (usuario nuevo en macOS)
+
+Si quiere repetir la comprobación en una cuenta de macOS sin las herramientas
+del desarrollador, siga estos pasos:
+
+1. Cree un usuario estándar (no administrador) llamado
+   `VerificacionNominaMX` desde **Preferencias del Sistema → Usuarios y grupos**.
+   No instale Homebrew, Python, Node ni Rust en esa cuenta.
+2. Inicie sesión con ese usuario y abra **Terminal**.
+3. Desde la carpeta del proyecto ejecute:
+
+   ```bash
+   GH_TOKEN=su_token scripts/verificacion_macos.sh
+   ```
+
+   El script descarga el `.dmg` del último run verde, lo monta, copia la app a
+   Aplicaciones, la abre, espera cinco segundos, toma la captura
+   `macos_01_app.png` y comprueba que se creó
+   `~/Library/Application Support/com.nomina.mx/nomina.db`. Todo queda
+   registrado en `docs/evidencia/verificacion_visual/macos/reporte.md`.
+
+4. **Importante:** el script no crea empresa ni trabajador. Con la app abierta,
+   hágalo manualmente: empresa con RFC `XAXX010101000` y régimen `601`;
+   trabajador José Pérez Núñez con CURP `PENJ850101HDFRRN01`, RFC
+   `PENJ850101AB1`, NSS `12345678901`, ingreso `2026-01-15`, salario diario
+   `500.00`, periodicidad quincenal y contrato indeterminado. Después cree el
+   periodo, calcule el recibo y exporte el PDF.
+5. Tome las capturas `macos_02_trabajador.png`, `macos_03_recibo.png`,
+   `macos_04_pdf_acentos.png` y `macos_05_bd_ruta.png` en la misma carpeta.
+   Cierre la app cuando termine; el script no la cierra por usted.
+
 ## 2. Configuración inicial de la empresa
 
 En el menú superior entre a **Empresa** y llene:

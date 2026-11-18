@@ -435,3 +435,23 @@ Fuentes oficiales consultadas:
   porque `sudo -n true` devuelve 'a password is required'; se documenta además
   que el botón de descarga de PDF no está enlazado en la UI.
 - No se crea el tag `v0.9.0` ni se inicia el piloto: Windows sigue bloqueante.
+
+---
+
+## 2026-11-18 — Desbloqueo macOS y preparación de release
+
+- `scripts/verificacion_macos.sh`: descarga el `.dmg` del último CI verde con
+  `gh`, lo monta con `hdiutil`, instala la app, la abre, captura
+  `macos_01_app.png`, verifica la BD y genera `reporte.md`. El flujo de alta y
+  capturas humanas queda documentado en el manual.
+- `scripts/empaquetar_release.sh`: descarga los bundles `.dmg` y `.msi` del
+  último run verde a `dist/`.
+- `docs/manual_usuario.md`: nueva sección 'Verificación post-instalación'.
+- `docs/smoke_test.md`: macOS queda como pendiente de ejecución por el
+  desarrollador dentro del usuario nuevo; Windows con tabla de tres opciones
+  (Parallels Pro, Azure VM, usuario nuevo físico) y estado ⏳ Pendiente.
+- `docs/release_notes_v0_9.md`: borrador con features, limitaciones, avisos de
+  Gatekeeper/SmartScreen y aviso de verificación pendiente.
+- `docs/casos_validacion_contable.md`: D7 registrado como 'pendiente de
+  identificar contador'.
+- Sin tag `v0.9.0`, sin Release y sin piloto hasta cerrar Windows.

@@ -215,44 +215,65 @@ contienen capturas porque no hubo entorno limpio utilizable.
 
 ### Verificación visual — macOS (usuario nuevo)
 
-**Estado: BLOQUEANTE.** No se pudo crear el usuario ni iniciar sesión.
+**Estado: ❌ BLOQUEANTE — pendiente de ejecución por el desarrollador.**
+El bloqueo anterior (`sudo: a password is required`) ya no es el problema de
+fondo: se generó un script que el desarrollador debe ejecutar **dentro** de la
+cuenta nueva, donde sí podrá crear y usar el usuario sin depender del agente.
 
-Comprobación del intento:
+Preparación lista:
 
-```
-$ sudo -n true
-sudo: a password is required
-$ dscl . -list /Users | grep -i verif
-(sin salida)
-```
+- `scripts/verificacion_macos.sh` (ejecutable): descarga el `.dmg` del último
+  run verde, lo monta con `hdiutil`, copia la app a `/Applications`, la abre,
+  espera 5 segundos, captura `macos_01_app.png`, verifica la BD y escribe
+  `docs/evidencia/verificacion_visual/macos/reporte.md`.
+- Procedimiento manual documentado en `docs/manual_usuario.md`, sección
+  'Verificación post-instalación'.
 
-No hay sudo sin contraseña, por lo que no fue posible ejecutar
-`sysadminctl -addUser VerificacionNominaMX` ni cambiar de sesión. El host actual
-tampoco sirve como sustituto: tiene Python 3.14 y cargo instalados.
+Restricción vigente: este agente no puede iniciar sesión con otro usuario ni
+hacer clicks en la app; por eso el estado permanece bloqueante hasta que se
+ejecute el script y se completen las capturas humanas.
 
 | Paso | Resultado | Captura | Notas |
 |------|-----------|---------|-------|
-| Crear usuario `VerificacionNominaMX` sin admin | ❌ | — | `sudo: a password is required` |
-| Iniciar sesión con ese usuario | ❌ | — | El usuario no existe |
-| Descargar artefacto `NominaMX-macos-latest` | ❌ | — | Sin sesión limpia |
-| Instalar .dmg y abrir con Gatekeeper | ❌ | — | Sin sesión limpia |
-| Crear empresa RFC `XAXX010101000`, régimen 601 | ❌ | — | Sin sesión limpia |
-| Alta de José Pérez Núñez | ❌ | — | Sin sesión limpia |
-| Periodo quincenal enero 2026 y recibo | ❌ | — | Sin sesión limpia |
-| Exportar PDF y revisar acentos en Preview | ❌ | — | Sin sesión limpia; además, el botón de descarga de PDF no está enlazado en la UI (`descargarRecibo` existe en `src/components/ReciboPDF.tsx` pero no se usa) |
-| Verificar `~/Library/Application Support/com.nomina.mx/nomina.db` | ❌ | — | Sin sesión limpia |
-| Capturas `macos_01_app.png` … `macos_05_bd_ruta.png` | ❌ | — | No se generaron |
+| Crear usuario `VerificacionNominaMX` sin admin | ⏳ | — | Debe hacerlo el desarrollador desde Preferencias del Sistema |
+| Iniciar sesión con ese usuario | ⏳ | — | Igual que el paso anterior |
+| Descargar artefacto `NominaMX-macos-latest` | ⏳ | — | Automatizado en `scripts/verificacion_macos.sh` |
+| Instalar .dmg y abrir con Gatekeeper | ⏳ | — | Automatizado: `hdiutil attach` + `cp -R` + `open -a` |
+| Captura de app abierta | ⏳ | `macos_01_app.png` | La genera el script |
+| Verificar `~/Library/Application Support/com.nomina.mx/nomina.db` | ⏳ | `reporte.md` | Lo comprueba el script |
+| Crear empresa RFC `XAXX010101000`, régimen 601 | ⏳ | `macos_02_*` | Flujo manual con clicks humanos |
+| Alta de José Pérez Núñez | ⏳ | `macos_02_trabajador.png` | Flujo manual |
+| Periodo quincenal enero 2026 y recibo | ⏳ | `macos_03_recibo.png` | Flujo manual |
+| Exportar PDF y revisar acentos en Preview | ⏳ | `macos_04_pdf_acentos.png` | Flujo manual; además, el botón de descarga de PDF no está enlazado en la UI (`descargarRecibo` existe en `src/components/ReciboPDF.tsx` pero no se usa) |
+| Captura de la ruta de la BD | ⏳ | `macos_05_bd_ruta.png` | Flujo manual |
 
-Nota honesta: el plan era usar un usuario nuevo en la Mac del desarrollador,
-no una máquina limpia virgen; eso cubriría aproximadamente el 90% del valor de
-la verificación de instalación y ejecución. Aun así no se pudo ejecutar.
+Nota honesta: la prueba se hará con un usuario nuevo en la Mac del
+desarrollador, no con una máquina limpia virgen. Eso cubre aproximadamente el
+90% del valor de la verificación de instalación y ejecución. Si el script o el
+flujo manual fallan, se registrará el error exacto y la captura, y se marcará el
+bloqueante específico.
 
-### Verificación visual — Windows (BLOQUEANTE)
+### Verificación visual — Windows
 
-**Estado: Pendiente.** Parallels edition limita exec/capture a Pro/Business.
-Host macOS no es limpio. Opciones: (a) upgrade Parallels Pro ($99 USD/año),
-(b) VM Windows en Azure (~$30 USD/mes), (c) usuario nuevo Windows en máquina
-física (si hay acceso).
+**Estado: ⏳ Pendiente — opciones documentadas, decisión del desarrollador.**
+No es un bloqueo técnico definitivo: la edición actual de Parallels limita
+`exec`, `capture` y `send-key-event` a Pro/Business, y el host macOS no es una
+máquina limpia (tiene Python 3.14 y cargo). Hay tres caminos viables:
+
+| Opción | Costo | Setup | Reproducible | Recomendado |
+|--------|-------|-------|--------------|-------------|
+| Parallels Pro | $99 USD/año | 15 min | Sí (script) | Sí, si ya tienes Parallels |
+| Azure VM Windows | ~$30 USD/mes | 1-2 hrs | Manual | Sí, si no quieres Parallels |
+| Usuario nuevo Windows físico | Gratis | 30 min | Manual | Sí, si tienes acceso |
+
+| Paso | Resultado | Captura | Notas |
+|------|-----------|---------|-------|
+| Elegir opción de entorno Windows | ⏳ | — | Decisión del desarrollador |
+| Descargar `NominaMX_0.1.0_x64_en-US.msi` del CI verde | ⏳ | — | `scripts/empaquetar_release.sh` ya prepara el bundle |
+| Instalar con SmartScreen ("Más información" → "Ejecutar de todas formas") | ⏳ | `windows_01_app.png` | Flujo manual |
+| Empresa, trabajador, periodo y recibo | ⏳ | `windows_02_*`, `windows_03_recibo.png` | Flujo manual con clicks humanos |
+| PDF y acentos en Edge | ⏳ | `windows_04_pdf_acentos.png` | Botón de descarga aún no enlazado en UI |
+| BD en `%APPDATA%\com.nomina.mx\nomina.db` | ⏳ | `windows_05_bd_ruta.png` | Verificación manual |
 
 **Impacto:** Sin verificación visual Windows, no se puede declarar v0.9.0 ni
 iniciar piloto con contadores. No se crea el tag `v0.9.0`.
