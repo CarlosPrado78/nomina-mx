@@ -81,6 +81,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 | PDF con acentos en Edge | Pendiente de verificación visual en Windows. El archivo existe pero no se ha abierto en Edge. Verificar antes de release. |
 | Ruta de SQLite `%APPDATA%\com.nomina.mx\nomina.db` | Pendiente (no se ejecutó la app interactiva en el runner) |
 
+### Verificación del Bloque B (horas extra) en Windows
+
+Run: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44242695969 — ambos jobs en verde.
+`cargo test` en `windows-latest`: 22 + 9 + 29 + 19 + 9 (horas extra) + 3 + 60 = **151 verdes, 1 ignorado**.
+El XML con `TipoPercepcion="019"` y dos nodos `HorasExtra` valida contra el XSD local en ambos sistemas.
+
 ## PDF de recibo — "José Pérez Núñez"
 
 Se generó el PDF de evidencia `docs/evidencia/recibo_jose_perez.pdf` con el texto acentuado

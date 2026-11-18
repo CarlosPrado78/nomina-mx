@@ -194,3 +194,6 @@ Fuentes oficiales consultadas:
 - Matriz de cumplimiento: filas LFT 66/67-68, LSS 27/28, LISR 93 I y CFDI
   `c_TipoHoras` marcadas como Cubierto; conteo 26 cubiertos / 40 filas.
 - README: "horas extra" se quitó de la lista de módulos pendientes.
+- CI posterior al bloque: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44242695969
+  con `macos-latest` y `windows-latest` en verde; en Windows `cargo test`
+  reportó **151 verdes + 1 ignorado** y `cargo tauri build` generó el `.msi`.
