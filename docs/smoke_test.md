@@ -213,6 +213,50 @@ Las carpetas `docs/evidencia/verificacion_visual/windows/` y
 `docs/evidencia/verificacion_visual/macos/` existen como placeholder; no
 contienen capturas porque no hubo entorno limpio utilizable.
 
+### Verificación visual — macOS (usuario nuevo)
+
+**Estado: BLOQUEANTE.** No se pudo crear el usuario ni iniciar sesión.
+
+Comprobación del intento:
+
+```
+$ sudo -n true
+sudo: a password is required
+$ dscl . -list /Users | grep -i verif
+(sin salida)
+```
+
+No hay sudo sin contraseña, por lo que no fue posible ejecutar
+`sysadminctl -addUser VerificacionNominaMX` ni cambiar de sesión. El host actual
+tampoco sirve como sustituto: tiene Python 3.14 y cargo instalados.
+
+| Paso | Resultado | Captura | Notas |
+|------|-----------|---------|-------|
+| Crear usuario `VerificacionNominaMX` sin admin | ❌ | — | `sudo: a password is required` |
+| Iniciar sesión con ese usuario | ❌ | — | El usuario no existe |
+| Descargar artefacto `NominaMX-macos-latest` | ❌ | — | Sin sesión limpia |
+| Instalar .dmg y abrir con Gatekeeper | ❌ | — | Sin sesión limpia |
+| Crear empresa RFC `XAXX010101000`, régimen 601 | ❌ | — | Sin sesión limpia |
+| Alta de José Pérez Núñez | ❌ | — | Sin sesión limpia |
+| Periodo quincenal enero 2026 y recibo | ❌ | — | Sin sesión limpia |
+| Exportar PDF y revisar acentos en Preview | ❌ | — | Sin sesión limpia; además, el botón de descarga de PDF no está enlazado en la UI (`descargarRecibo` existe en `src/components/ReciboPDF.tsx` pero no se usa) |
+| Verificar `~/Library/Application Support/com.nomina.mx/nomina.db` | ❌ | — | Sin sesión limpia |
+| Capturas `macos_01_app.png` … `macos_05_bd_ruta.png` | ❌ | — | No se generaron |
+
+Nota honesta: el plan era usar un usuario nuevo en la Mac del desarrollador,
+no una máquina limpia virgen; eso cubriría aproximadamente el 90% del valor de
+la verificación de instalación y ejecución. Aun así no se pudo ejecutar.
+
+### Verificación visual — Windows (BLOQUEANTE)
+
+**Estado: Pendiente.** Parallels edition limita exec/capture a Pro/Business.
+Host macOS no es limpio. Opciones: (a) upgrade Parallels Pro ($99 USD/año),
+(b) VM Windows en Azure (~$30 USD/mes), (c) usuario nuevo Windows en máquina
+física (si hay acceso).
+
+**Impacto:** Sin verificación visual Windows, no se puede declarar v0.9.0 ni
+iniciar piloto con contadores. No se crea el tag `v0.9.0`.
+
 ## Resumen
 
 | Evidencia | Estado |

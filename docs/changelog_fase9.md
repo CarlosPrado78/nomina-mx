@@ -416,3 +416,22 @@ Fuentes oficiales consultadas:
   `docs/release_notes_v0_9.md` (solo si la verificación se completa).
 - `docs/pendientes_v1_1.md`: confirmación de que P1 no aplica, con referencia a
   `docs/respuesta_p1.md`.
+
+---
+
+## 2026-11-18 — Bloque D parcial: documentación del piloto
+
+- `docs/manual_usuario.md`: manual para contadores con instalación en macOS y
+  Windows, alta de empresa y trabajador, captura del periodo, cálculo del
+  recibo, importación CSV, finiquitos y liquidaciones, recálculo retroactivo,
+  respaldo y preguntas frecuentes.
+- `docs/casos_validacion_contable.md`: 10 casos con datos de entrada, cálculo
+  manual, cifra esperada, columna para la cifra de la app y espacio para firma.
+  Incluye la limitación de incapacidades y la variante de CEAV con SBC integrado.
+- `docs/feedback_piloto.md`: formulario, métricas, cronograma de dos semanas,
+  reglas de privacidad y canal de reporte.
+- `docs/smoke_test.md`: secciones 'Verificación visual — macOS (usuario nuevo)'
+  y 'Verificación visual — Windows (BLOQUEANTE)'. macOS tampoco se pudo ejecutar
+  porque `sudo -n true` devuelve 'a password is required'; se documenta además
+  que el botón de descarga de PDF no está enlazado en la UI.
+- No se crea el tag `v0.9.0` ni se inicia el piloto: Windows sigue bloqueante.
