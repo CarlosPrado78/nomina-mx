@@ -109,7 +109,7 @@ recargan al cambiar de empresa; la UI del selector quedó enlazada en el header.
 
 ### Verificación del ÍTEM C2 (importación CSV) en Windows
 
-Run: *(pendiente de registrar el URL del run tras el push)*
+Run: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44263914539
 con `macos-latest` y `windows-latest` en verde.
 
 `cargo test` en `windows-latest`: 22 + 5 (auditoría) + 4 (backup) + 9 + 29 +

@@ -342,4 +342,8 @@ Fuentes oficiales consultadas:
   completa con fundamentos, catálogos, comando, ejemplo y evidencia.
 - Matriz de cumplimiento: fila "Importación CSV" → Cubierto; conteo actualizado
   a 30 cubiertos / 40 filas.
-- CI: *(pendiente de registrar el URL del run tras el push)*.
+- CI: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44263914539
+  con `macos-latest` y `windows-latest` en verde; el `Frontend build` compiló
+  `Importar.tsx`, `tauri.ts` y `App.tsx` sin errores de TypeScript, `cargo test`
+  en ambos sistemas reportó **170 verdes + 1 ignorado** y `cargo tauri build`
+  generó el `.dmg` y el `.msi`.
