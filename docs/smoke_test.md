@@ -107,6 +107,18 @@ con `macos-latest` y `windows-latest` en verde.
 `Frontend build` compiló `src/pages/EmpresaSelector.tsx` y las pantallas que
 recargan al cambiar de empresa; la UI del selector quedó enlazada en el header.
 
+### Verificación del ÍTEM C2 (importación CSV) en Windows
+
+Run: *(pendiente de registrar el URL del run tras el push)*
+con `macos-latest` y `windows-latest` en verde.
+
+`cargo test` en `windows-latest`: 22 + 5 (auditoría) + 4 (backup) + 9 + 29 +
+19 + 9 + 5 (multi-empresa) + 5 (importación) + 3 + 60 = **170 verdes,
+1 ignorado**. El `Frontend build` compiló `src/pages/Importar.tsx`,
+`src/lib/tauri.ts` y `src/App.tsx` sin errores de TypeScript; la UI quedó
+enlazada en `/importar` con selector de archivo y descarga de plantilla.
+`cargo tauri build` generó el `.msi` con el permiso `dialog:allow-open`.
+
 ## PDF de recibo — "José Pérez Núñez"
 
 Se generó el PDF de evidencia `docs/evidencia/recibo_jose_perez.pdf` con el texto acentuado

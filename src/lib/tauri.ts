@@ -1,5 +1,15 @@
 import { invoke } from '@tauri-apps/api/core';
 
+/** C2 — Resultado de una importación CSV (errores por fila, no por archivo). */
+export interface ImportResult {
+  insertados: number;
+  errores: Array<{
+    fila: number;
+    columna: string;
+    mensaje: string;
+  }>;
+}
+
 export const api = {
   guardarEmpresa: (empresa: any) => invoke('guardar_empresa', { empresa }),
   obtenerEmpresa: () => invoke<any>('obtener_empresa'),
@@ -9,6 +19,8 @@ export const api = {
   guardarTrabajador: (trabajador: any) => invoke('guardar_trabajador', { t: trabajador }),
   listarTrabajadores: (empresaId: number) => invoke<any[]>('listar_trabajadores', { empresaId }),
   obtenerTrabajador: (id: number) => invoke<any>('obtener_trabajador', { id }),
+  importarTrabajadoresCsv: (ruta: string) =>
+    invoke<ImportResult>('importar_trabajadores_csv', { ruta }),
   calcularRecibo: (trabajadorId: number, empresaId: number, dias: number, periodicidad: string, fechaPago: string, horasExtra?: any) =>
     invoke<any>('calcular_recibo', { trabajadorId, empresaId, dias, periodicidad, fechaPago, horasExtra }),
   guardarPeriodo: (periodo: any) => invoke('guardar_periodo', { periodo }),

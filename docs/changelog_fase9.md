@@ -303,3 +303,43 @@ Fuentes oficiales consultadas:
   `EmpresaSelector.tsx` y los cambios de `store.ts`/`App.tsx` sin errores de
   TypeScript, `cargo test` en Windows reportó **165 verdes + 1 ignorado** y
   `cargo tauri build` generó el `.msi`.
+
+---
+
+## 2026-11-18 — BLOQUE C / ÍTEM C2: Importación CSV
+
+**Estado:** COMPLETADO.
+
+- `src-tauri/src/commands/importar.rs`: comando
+  `importar_trabajadores_csv(ruta: String) -> ImportResult` y helper de pool
+  `importar_trabajadores_csv_pool`. `ImportResult { insertados, errores }` y
+  `ErrorFila { fila, columna, mensaje }` derivan `Serialize`/`Deserialize`.
+- Lectura UTF-8 con fallback a **Windows-1252** (Latin-1 de Excel) mediante
+  `encoding_rs`; BOM UTF-8 eliminado. Columnas requeridas y opcionales
+  validadas en encabezado; falta una requerida => `Err` de archivo.
+- Validaciones por fila: CURP 18 caracteres (conteo `chars()`, seguro con
+  `Ñ`), RFC 12–13 caracteres, NSS 11 dígitos, fecha `AAAA-MM-DD` real,
+  salario > 0, periodicidad y tipo de contrato en catálogos SAT, y campos
+  INFONAVIT opcionales. Errores con número de fila (encabezado = 1).
+- **Transacción por fila**: `p.begin()` → `INSERT` → `tx.commit()`. Una fila
+  mala NO aborta el archivo; se reporta en `errores` y continúan las demás.
+- `empresa_id` se obtiene en servidor con `obtener_empresa_activa_pool`;
+  una columna `empresa_id` en el CSV se ignora (verificado en test con valor
+  falso `999`). Los INSERT quedan en `audit_log` por los triggers de C3.
+- Dependencias agregadas: `csv = "1"` y `encoding_rs = "0.8"` en
+  `src-tauri/Cargo.toml`.
+- UI: `src/pages/Importar.tsx` con selector de archivo
+  (`@tauri-apps/plugin-dialog`), botón de importación, tabla de errores y
+  descarga de plantilla con BOM UTF-8. Enlazada en `/importar` y en el nav de
+  `src/App.tsx`. `api.importarTrabajadoresCsv` agregado en `src/lib/tauri.ts`.
+  Permiso `dialog:allow-open` en `src-tauri/capabilities/default.json`.
+- Plantilla canónica: `docs/templates/trabajadores_template.csv` con todas las
+  columnas requeridas/opcionales y una fila de ejemplo acentuada.
+- `src-tauri/tests/importar.rs`: 5 tests obligatorios en verde sobre BD temporal
+  con migraciones 1–5. `cargo test`: **170 passed; 0 failed; 1 ignored**
+  (165 previos + 5 nuevos).
+- `docs/operacion.md`: sección "Importación masiva de trabajadores (CSV/Excel)"
+  completa con fundamentos, catálogos, comando, ejemplo y evidencia.
+- Matriz de cumplimiento: fila "Importación CSV" → Cubierto; conteo actualizado
+  a 30 cubiertos / 40 filas.
+- CI: *(pendiente de registrar el URL del run tras el push)*.

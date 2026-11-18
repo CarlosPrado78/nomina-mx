@@ -23,6 +23,9 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono"] }
 tokio = { version = "1", features = ["full"] }
 chrono = { version = "0.4", features = ["serde"] }
 regex = "1"
+# C2: lectura de CSV y decodificación UTF-8 con fallback Latin-1 (Windows-1252).
+csv = "1"
+encoding_rs = "0.8"
 
 [dev-dependencies]
 quick-xml = { version = "0.36", features = ["serialize"] }

@@ -1,0 +1,2 @@
+nombre,curp,rfc,nss,fecha_ingreso,salario_diario,periodicidad_pago,tipo_contrato,num_empleado,departamento,puesto,infonavit_activo,infonavit_factor,infonavit_tipo
+Ana Rodríguez,RODR900101HDFNSR08,RODR900101AB1,12345678901,2020-01-15,450.50,mensual,indefinido,101,Producción,Operadora,0,0,CUOTA_FIJA_VSM

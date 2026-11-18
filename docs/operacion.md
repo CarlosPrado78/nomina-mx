@@ -1,8 +1,96 @@
 # Operación
 
 ## Importación masiva de trabajadores (CSV/Excel)
-Estado: **Pendiente para v1.1**. No existe comando Tauri ni pantalla de importación.
-El alta es individual en `src/pages/Trabajadores.tsx` vía `guardar_trabajador`.
+
+Estado: **Cubierto** (ÍTEM C2). Implementado en
+`src-tauri/src/commands/importar.rs`, registrado en el `invoke_handler` de
+`src-tauri/src/lib.rs` y enlazado en la UI `src/pages/Importar.tsx` (ruta
+`/importar`). El alta individual sigue disponible en
+`src/pages/Trabajadores.tsx` vía `guardar_trabajador`.
+
+### Fundamento y reglas
+
+- Referencias: CFF art. 28 (conservación de registros), LFT arts. 2 y 25
+  (relación de trabajo y salario) y catálogos del SAT `c_PeriodicidadPago` y
+  `c_TipoContrato` usados por el CFDI de Nómina 1.2.
+- El archivo se lee en el backend. Se intenta **UTF-8** primero y, si los bytes
+  no son válidos, se decodifica **Windows-1252** (superconjunto de Latin-1
+  habitual en Excel en español). Se elimina un BOM UTF-8 inicial si existe.
+- El encabezado es la **fila 1**; la primera fila de datos es la **fila 2**.
+  Los errores reportan el número de fila real del CSV.
+- Si falta una columna requerida, el comando devuelve `Err` de archivo y no
+  inserta nada. Si una fila es inválida, se acumula en `ImportResult.errores`
+  y **las demás filas se procesan igual**.
+- Cada fila válida se inserta en su **propia transacción** (`p.begin()` →
+  `tx.commit()`). No hay transacción global por archivo.
+- `empresa_id` **nunca se lee del CSV**: se resuelve en servidor con
+  `obtener_empresa_activa_pool`. Una columna `empresa_id` en el archivo se
+  ignora. Todas las altas quedan registradas en `audit_log` por los triggers
+  de C3.
+
+### Columnas
+
+Requeridas: `nombre`, `curp`, `rfc`, `nss`, `fecha_ingreso`,
+`salario_diario`, `periodicidad_pago`, `tipo_contrato`.
+
+Opcionales: `num_empleado`, `departamento`, `puesto`, `infonavit_activo`,
+`infonavit_factor`, `infonavit_tipo` (por defecto `CUOTA_FIJA_VSM`).
+
+| Campo | Validación |
+|-------|------------|
+| `curp` | 18 caracteres con formato CURP (expresión regular del SAT) |
+| `rfc` | 12 o 13 caracteres; acepta `Ñ` y `&` |
+| `nss` | Exactamente 11 dígitos ASCII |
+| `fecha_ingreso` | `AAAA-MM-DD` y fecha calendario válida |
+| `salario_diario` | Numérico finito > 0 |
+| `periodicidad_pago` | `diaria`, `semanal`, `quincenal`, `mensual`, `bimestral`, `trimestral`, `semestral`, `anual` |
+| `tipo_contrato` | `01`/`indefinido`, `02`/`temporal`, `03`/`obra_determinada` (y alias en español) |
+| `infonavit_activo` | `1`/`0`, `true`/`false`, `si`/`no` |
+| `infonavit_factor` | Numérico finito ≥ 0 |
+
+La plantilla canónica está en `docs/templates/trabajadores_template.csv` y se
+puede descargar desde la propia pantalla (BOM UTF-8 para Excel).
+
+### Comando Tauri
+
+```ts
+interface ErrorFila {
+  fila: number;       // número de fila del CSV (encabezado = 1)
+  columna: string;    // columna inválida, o "fila"/"base_de_datos"
+  mensaje: string;
+}
+
+interface ImportResult {
+  insertados: number;
+  errores: ErrorFila[];
+}
+
+const resultado = await invoke<ImportResult>('importar_trabajadores_csv', {
+  ruta: '/ruta/absoluta/trabajadores.csv',
+});
+console.log(resultado.insertados, resultado.errores);
+```
+
+También está expuesto como `api.importarTrabajadoresCsv(ruta)` en
+`src/lib/tauri.ts`. La UI usa `@tauri-apps/plugin-dialog` (permiso
+`dialog:allow-open` en `src-tauri/capabilities/default.json`) para elegir el
+archivo y muestra una tabla con fila, columna y mensaje de cada error.
+
+### Evidencia
+
+`src-tauri/tests/importar.rs` aplica las migraciones 1–5 sobre SQLite temporal
+y cubre los cinco escenarios obligatorios:
+
+1. `importar_csv_valido_inserta_todos` — 5 filas → 5 insertados, 0 errores,
+   `empresa_id=1` aunque el CSV intente enviar `999`, y 5 registros en
+   `audit_log`.
+2. `importar_csv_con_una_fila_invalida_procesa_el_resto` — 5 filas, CURP mala
+   en la fila CSV 3 → 4 insertados y 1 error en `curp`.
+3. `importar_csv_falta_columna_requerida_falla` — sin `curp` → `Err`, 0 altas.
+4. `importar_csv_rfc_invalido_no_inserta` — RFC malo → 0 altas y error en
+   columna `rfc`, fila 2.
+5. `importar_csv_encoding_latin1_funciona` — `José Ángel` en Windows-1252 se
+   conserva con acentos en BD.
 
 ## Backup y restore de la BD
 

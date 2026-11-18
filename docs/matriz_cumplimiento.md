@@ -38,17 +38,17 @@ Estado: **Cubierto** = archivo + función + test verde. **Parcial** = existe fun
 | INEGI | UMA 2026 | Enero 113.14/3,439.46; desde feb 117.31/3,566.22 | migrations/0002_seed | (parámetro BD) | cargo test + tests/subsidio_2026.rs | Cubierto |
 | Subsidio | Enero 15.59% UMA 2025 | 536.21 = 15.59% × 3,439.46 | migrations/0002_seed | cargar_param_vigente | subsidio_enero_2026_536_21 | Cubierto |
 | Subsidio | Feb-dic 15.02% UMA 2026 | 535.65 = 15.02% × 3,566.22 | migrations/0002_seed | cargar_param_vigente | subsidio_febrero_2026_535_65 | Cubierto |
-| Op | - | Importación CSV/Excel | - | - | - | Pendiente |
+| Op | - | Importación CSV (CFF art. 28, LFT 2 y 25, catálogos SAT) | commands/importar.rs, pages/Importar.tsx, templates/trabajadores_template.csv, capabilities/default.json | importar_trabajadores_csv, importar_trabajadores_csv_pool | tests/importar.rs: importar_csv_valido_inserta_todos, importar_csv_con_una_fila_invalida_procesa_el_resto, importar_csv_falta_columna_requerida_falla, importar_csv_rfc_invalido_no_inserta, importar_csv_encoding_latin1_funciona | Cubierto |
 | Op | - | Backup/restore BD (art. 28 CFF, conservación) | commands/backup.rs | backup_db, restore_db, listar_backups | tests/backup.rs: backup_genera_archivo_valido, restore_reemplaza_bd, restore_rechaza_archivo_corrupto, backup_no_sobrescribe | Cubierto |
 | Op | - | Log de auditoría (CFF art. 28, LSS art. 15) | migrations/0003_audit_log.sql, commands/auditoria.rs | listar_auditoria, configurar_usuario_auditoria | tests/auditoria.rs: trigger_insert_trabajador_crea_audit_log, trigger_update_trabajador_guarda_antes_y_despues, trigger_delete_trabajador_guarda_registro, audit_log_no_se_puede_actualizar, listar_auditoria_filtra_por_tabla | Cubierto |
 | Op | - | Multi-empresa (LISR 79 III, CFF 27) | migrations/0004_multi_empresa.sql, commands/empresas.rs, pages/EmpresaSelector.tsx | listar_empresas, cambiar_empresa_activa, crear_empresa | tests/multi_empresa.rs: multi_empresa_aislamiento_trabajadores, multi_empresa_aislamiento_recibos, cambiar_empresa_activa_persiste, crear_empresa_valida_rfc_unico, migracion_0004_asigna_default_a_registros_existentes | Cubierto |
 | Op | - | Recálculo retroactivo SBC | - | - | - | Pendiente |
 
 ## Conteo
-- Cubierto: 29
+- Cubierto: 30
 - Estructura OK; timbrado real PENDIENTE: 1
 - Parcial: 3
-- Pendiente: 7
+- Pendiente: 6
 - Total filas: 40
 
 ## Confirmaciones solicitadas
