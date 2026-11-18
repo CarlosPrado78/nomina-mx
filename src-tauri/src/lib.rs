@@ -67,6 +67,8 @@ pub fn run() {
             commands::trabajador::listar_trabajadores,
             commands::trabajador::obtener_trabajador,
             commands::importar::importar_trabajadores_csv,
+            commands::recalculo::recalcular_periodo,
+            commands::recalculo::recalcular_trabajador_periodo,
             commands::nomina::calcular_recibo,
             commands::nomina::guardar_periodo,
             commands::nomina::listar_periodos,

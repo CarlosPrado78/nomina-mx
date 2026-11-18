@@ -10,6 +10,25 @@ export interface ImportResult {
   }>;
 }
 
+/** C5 — Diferencia detectada al recalcular un recibo. */
+export interface Diferencia {
+  trabajador_id: number;
+  nombre: string;
+  percepciones_antes: number;
+  percepciones_despues: number;
+  deducciones_antes: number;
+  deducciones_despues: number;
+  neto_antes: number;
+  neto_despues: number;
+  delta_neto: number;
+}
+
+/** C5 — Resultado de un recálculo retroactivo. */
+export interface ResultadoRecalculo {
+  recibos_recalculados: number;
+  diferencias: Diferencia[];
+}
+
 export const api = {
   guardarEmpresa: (empresa: any) => invoke('guardar_empresa', { empresa }),
   obtenerEmpresa: () => invoke<any>('obtener_empresa'),
@@ -21,6 +40,10 @@ export const api = {
   obtenerTrabajador: (id: number) => invoke<any>('obtener_trabajador', { id }),
   importarTrabajadoresCsv: (ruta: string) =>
     invoke<ImportResult>('importar_trabajadores_csv', { ruta }),
+  recalcularPeriodo: (periodoId: number, motivo: string) =>
+    invoke<ResultadoRecalculo>('recalcular_periodo', { periodoId, motivo }),
+  recalcularTrabajadorPeriodo: (trabajadorId: number, periodoId: number) =>
+    invoke<ResultadoRecalculo>('recalcular_trabajador_periodo', { trabajadorId, periodoId }),
   calcularRecibo: (trabajadorId: number, empresaId: number, dias: number, periodicidad: string, fechaPago: string, horasExtra?: any) =>
     invoke<any>('calcular_recibo', { trabajadorId, empresaId, dias, periodicidad, fechaPago, horasExtra }),
   guardarPeriodo: (periodo: any) => invoke('guardar_periodo', { periodo }),

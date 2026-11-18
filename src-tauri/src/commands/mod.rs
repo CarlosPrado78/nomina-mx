@@ -2,6 +2,7 @@ pub mod auditoria;
 pub mod backup;
 pub mod empresa;
 pub mod importar;
+pub mod recalculo;
 pub mod empresas;
 pub mod trabajador;
 pub mod nomina;

@@ -25,3 +25,20 @@ Deben derivarse del trabajador:
 
 También debe validarse contra las reglas de diferenciación de percepciones por
 antigüedad del Anexo 20 RMF.
+
+## P5 — CFDI de ajuste para recálculo
+
+**Estado: Pendiente v1.1.** El ÍTEM C5 (`commands/recalculo.rs`) calcula y reporta
+las diferencias de un recálculo retroactivo, pero **no genera comprobantes**.
+Para v1.1 debe emitirse un CFDI de ajuste con `TipoDeComprobante=E` (Egreso)
+que documente la diferencia entre el recibo original y el recalculado, conforme
+al Anexo 20 RMF y al complemento Nómina 1.2.
+
+Requisitos pendientes:
+
+- Generar `TipoDeComprobante=E` con importes positivos y la referencia al UUID
+  del CFDI original (`CfdiRelacionados`, `CfdiRelacionado`, `TipoRelacion`).
+- No alterar el XML ni el UUID del comprobante original.
+- Registrar la operacion en `audit_log` con el motivo y el UUID del ajuste.
+- Validar el complemento Nómina 1.2 y el Anexo 20 RMF antes de timbrar.
+

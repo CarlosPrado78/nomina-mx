@@ -315,7 +315,115 @@ permite crear y activar una empresa nueva sin recurrir a SQL.
 `crear_empresa_valida_rfc_unico` y
 `migracion_0004_asigna_default_a_registros_existentes`.
 
-## Recálculo retroactivo de SBC
-Estado: **Pendiente para v1.1**. No existe comando que recalcule `sdi`/SBC de periodos
-anteriores ni que recalcule recibos ya guardados al cambiar UMA o prestaciones.
-`calcular_recibo` calcula el periodo solicitado con los parámetros vigentes.
+## Recálculo retroactivo de SBC y recibos
+
+Estado: **Cubierto** (ÍTEM C5). Implementado en
+`src-tauri/src/commands/recalculo.rs`, registrado en el `invoke_handler` de
+`src-tauri/src/lib.rs` y enlazado en `src/pages/Recalculo.tsx` (ruta
+`/recalculo`).
+
+### Fundamento y regla de oro
+
+- Fuentes: CFF art. 28 (conservación de registros), LSS arts. 27 y 28 (SDI/SBC
+  y tope de 25 UMA), LISR arts. 96 y 99 (ISR y subsidio), RMF Anexos 8 y 11
+  (tarifas con vigencia) y CFDI 4.0 / Nómina 1.2 (comprobante timbrado
+  inmutable).
+- Los parámetros se resuelven con `cargar_param_vigente_pool(tipo,
+  fecha_pago_original)` de la tabla `tablas_fiscales` (`vigencia_inicio` ≤
+  fecha ≤ `vigencia_fin`). **Nunca se usa `CURRENT_DATE`**. Un periodo con
+  `fecha_pago = 2026-01-31` usa UMA diaria **$113.14** y subsidio **$536.21**,
+  aunque el recálculo se ejecute en noviembre 2026 (UMA $117.31 / subsidio
+  $535.65).
+- El motivo es **obligatorio** en `recalcular_periodo`. Vacío o solo espacios
+  devuelve `Err`. Si el periodo no existe en la empresa activa, también `Err`.
+- Se permiten periodos **abiertos o cerrados**; el estado se conserva y se
+  copia al JSON de auditoría. El cierre no bloquea la corrección, pero el
+  motivo deja constancia.
+- Cada recálculo inserta una fila en `audit_log` con
+  `operacion = 'RECALCULO'`, `tabla = 'recibos'`, `registro_id = periodo_id` y
+  el motivo en `despues_json`, junto con la UMA y el subsidio usados.
+
+### Flujo
+
+1. Se carga el periodo por `id` y empresa activa (regla C4). Se toman
+   `dias`, `fecha_pago` y `estado`.
+2. Se leen los recibos del periodo con nombre del trabajador.
+3. Para cada recibo se recalcula el SBC y el recibo completo con los parámetros
+   vigentes a `fecha_pago`. Las horas extra se reconstruyen desde el desglose
+   guardado (tiempo total; reparto determinista con los parámetros 2026).
+4. Se comparan percepciones, deducciones y neto. Las diferencias se devuelven
+   **por trabajador** con antes/después y `delta_neto = neto_despues −
+   neto_antes`.
+5. Solo se hace `UPDATE` de los recibos cambiados **sin `uuid_cfdi`**. Los
+   timbrados se reportan en `diferencias` pero sus importes, `xml_cfdi` y
+   `uuid_cfdi` quedan intactos.
+6. Actualizaciones y fila de auditoría se confirman en una sola transacción.
+
+### Comandos Tauri
+
+```ts
+interface Diferencia {
+  trabajador_id: number;
+  nombre: string;
+  percepciones_antes: number;
+  percepciones_despues: number;
+  deducciones_antes: number;
+  deducciones_despues: number;
+  neto_antes: number;
+  neto_despues: number;
+  delta_neto: number;
+}
+
+interface ResultadoRecalculo {
+  recibos_recalculados: number; // excluye CFDI timbrados
+  diferencias: Diferencia[];
+}
+
+// Motivo obligatorio: recalcula todos los recibos del periodo.
+const resultado = await invoke<ResultadoRecalculo>('recalcular_periodo', {
+  periodoId: 12,
+  motivo: 'Corrección de salario posterior al cierre',
+});
+
+// Firma sin motivo: usa motivo de sistema no vacío en audit_log.
+const individual = await invoke<ResultadoRecalculo>(
+  'recalcular_trabajador_periodo',
+  { trabajadorId: 7, periodoId: 12 },
+);
+```
+
+Equivalentes en `src/lib/tauri.ts`: `api.recalcularPeriodo(periodoId, motivo)`
+y `api.recalcularTrabajadorPeriodo(trabajadorId, periodoId)`.
+
+### Ejemplo numérico verificado
+
+Con salario diario `10,000`, 30 días y `fecha_pago = 2026-01-31`:
+
+- Factor de integración: `1 + (15 + 12×0.25 + 15×12×0.25/365)/365 =
+  1.049651…`; SDI `10,496.51` pero se topa a `25 × 113.14 = 2,828.50`.
+- Con UMA actual de noviembre sería `25 × 117.31 = 2,932.75`. El test
+  `recalculo_usa_uma_historica` comprueba ambos valores y que la auditoría
+  registra `uma_diaria = 113.14`.
+- Con salario `350`, 30 días e ingreso `10,500`, ISR mensual
+  `420.95 + (10,500 − 7,168.52)×10.88% = 783.415024`. El subsidio de enero
+  (`536.21`) deja retención `247.205024`; el de febrero (`535.65`) deja
+  `247.765024`. Diferencia exacta: **$0.56**.
+
+### Advertencias
+
+- No se modifica ningún recibo con `uuid_cfdi` no nulo: hacerlo dejaría el XML
+  timbrado fuera de sincronía con la BD.
+- No se genera CFDI de ajuste en esta entrega. `TipoDeComprobante="E"` queda
+  registrado como **Pendiente v1.1** en `docs/pendientes_v1_1.md`.
+- Las horas extra reconstruidas asumen jornada diurna, una semana y sin
+  supuesto de salario mínimo porque esos datos no están persistidos en el
+  recibo; para un caso atípico, revisar el XML original antes de aceptar el
+  recálculo.
+
+### Evidencia
+
+`src-tauri/tests/recalculo.rs` cubre los cinco escenarios obligatorios sobre
+BD temporal con migraciones 1–5: `recalculo_usa_uma_historica`,
+`recalculo_con_subsidio_enero_usa_536_21`,
+`recalculo_reporta_diferencias`, `recalculo_registra_auditoria` y
+`recalculo_no_modifica_cfdi_timbrado`.

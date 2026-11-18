@@ -42,13 +42,13 @@ Estado: **Cubierto** = archivo + función + test verde. **Parcial** = existe fun
 | Op | - | Backup/restore BD (art. 28 CFF, conservación) | commands/backup.rs | backup_db, restore_db, listar_backups | tests/backup.rs: backup_genera_archivo_valido, restore_reemplaza_bd, restore_rechaza_archivo_corrupto, backup_no_sobrescribe | Cubierto |
 | Op | - | Log de auditoría (CFF art. 28, LSS art. 15) | migrations/0003_audit_log.sql, commands/auditoria.rs | listar_auditoria, configurar_usuario_auditoria | tests/auditoria.rs: trigger_insert_trabajador_crea_audit_log, trigger_update_trabajador_guarda_antes_y_despues, trigger_delete_trabajador_guarda_registro, audit_log_no_se_puede_actualizar, listar_auditoria_filtra_por_tabla | Cubierto |
 | Op | - | Multi-empresa (LISR 79 III, CFF 27) | migrations/0004_multi_empresa.sql, commands/empresas.rs, pages/EmpresaSelector.tsx | listar_empresas, cambiar_empresa_activa, crear_empresa | tests/multi_empresa.rs: multi_empresa_aislamiento_trabajadores, multi_empresa_aislamiento_recibos, cambiar_empresa_activa_persiste, crear_empresa_valida_rfc_unico, migracion_0004_asigna_default_a_registros_existentes | Cubierto |
-| Op | - | Recálculo retroactivo SBC | - | - | - | Pendiente |
+| Op | - | Recálculo retroactivo SBC y recibos (CFF art. 28, LSS 27-28, LISR 96/99) | commands/recalculo.rs, pages/Recalculo.tsx | recalcular_periodo, recalcular_trabajador_periodo, calcular_recibo_historico_pool | tests/recalculo.rs: recalculo_usa_uma_historica, recalculo_con_subsidio_enero_usa_536_21, recalculo_reporta_diferencias, recalculo_registra_auditoria, recalculo_no_modifica_cfdi_timbrado | Cubierto — CFDI de ajuste "E" pendiente v1.1 |
 
 ## Conteo
-- Cubierto: 30
+- Cubierto: 31
 - Estructura OK; timbrado real PENDIENTE: 1
 - Parcial: 3
-- Pendiente: 6
+- Pendiente: 5
 - Total filas: 40
 
 ## Confirmaciones solicitadas

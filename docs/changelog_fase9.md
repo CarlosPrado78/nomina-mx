@@ -347,3 +347,46 @@ Fuentes oficiales consultadas:
   `Importar.tsx`, `tauri.ts` y `App.tsx` sin errores de TypeScript, `cargo test`
   en ambos sistemas reportó **170 verdes + 1 ignorado** y `cargo tauri build`
   generó el `.dmg` y el `.msi`.
+
+---
+
+## 2026-11-18 — BLOQUE C / ÍTEM C5: Recálculo retroactivo de SBC y recibos
+
+**Estado:** COMPLETADO. **Bloque C cerrado.**
+
+- `src-tauri/src/commands/recalculo.rs`: comandos
+  `recalcular_periodo(periodo_id, motivo)` y
+  `recalcular_trabajador_periodo(trabajador_id, periodo_id)`, más el helper
+  público `calcular_recibo_historico_pool` y `ResultadoRecalculo {
+  recibos_recalculados, diferencias }` con `Diferencia` por trabajador.
+- Los parámetros se resuelven con `cargar_param_vigente_pool(tipo,
+  fecha_pago_original)` sobre `tablas_fiscales` (`vigencia_inicio` ≤ fecha ≤
+  `vigencia_fin`). Enero 2026 usa UMA **113.14** y subsidio **536.21** aunque
+  se recalcule en noviembre. No se usa la fecha actual.
+- Motivo obligatorio: vacío => `Err`; periodo inexistente en la empresa activa
+  => `Err`. La ruta individual usa un motivo de sistema no vacío porque su
+  firma pública no incluye motivo. Se permiten periodos abiertos y cerrados.
+- Recálculo completo del recibo (SBC con tope 25 UMA, IMSS, INFONAVIT, SAR,
+  ISR con subsidio histórico, ISN y horas extra reconstruidas del desglose).
+  Comparación antes/después por trabajador con `delta_neto`.
+- Actualización en transacción única junto con una fila `audit_log` con
+  `operacion='RECALCULO'`, motivo, UMA/subsidio usados y
+  `cfdi_ajuste='PENDIENTE_V1_1'`.
+- **CFDI timbrado es inmutable**: recibos con `uuid_cfdi` no nulo se reportan en
+  `diferencias` pero no se actualizan; `xml_cfdi`, `uuid_cfdi` y
+  `fecha_timbrado` quedan intactos.
+- UI: `src/pages/Recalculo.tsx` con selector de periodo, motivo obligatorio,
+  recálculo individual opcional, tabla de diferencias y advertencias.
+  Enlazada en `/recalculo` y en el nav de `src/App.tsx`; wrappers
+  `api.recalcularPeriodo` y `api.recalcularTrabajadorPeriodo` en
+  `src/lib/tauri.ts`.
+- `src-tauri/tests/recalculo.rs`: 5 tests obligatorios en verde sobre BD temporal
+  con migraciones 1–5. `cargo test`: **175 passed; 0 failed; 1 ignored**
+  (170 previos + 5 nuevos).
+- `docs/operacion.md`: sección "Recálculo retroactivo de SBC y recibos" completa
+  con flujo, ejemplos numéricos y advertencias.
+- Matriz de cumplimiento: fila "Recálculo retroactivo SBC" → Cubierto; conteo
+  actualizado a 31 cubiertos / 40 filas.
+- `docs/pendientes_v1_1.md`: registro del CFDI de ajuste
+  (`TipoDeComprobante="E"`) como Pendiente v1.1.
+- CI: *(pendiente de registrar el URL del run tras el push)*.

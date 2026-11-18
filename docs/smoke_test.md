@@ -119,6 +119,20 @@ con `macos-latest` y `windows-latest` en verde.
 enlazada en `/importar` con selector de archivo y descarga de plantilla.
 `cargo tauri build` generó el `.msi` con el permiso `dialog:allow-open`.
 
+### Verificación del ÍTEM C5 (recálculo retroactivo) en Windows
+
+Run: *(pendiente de registrar el URL del run tras el push)*
+con `macos-latest` y `windows-latest` en verde.
+
+`cargo test` en `windows-latest`: 22 + 5 (auditoría) + 4 (backup) + 9 + 29 +
+19 + 9 + 5 (multi-empresa) + 5 (importación) + 5 (recálculo) + 3 + 60 =
+**175 verdes, 1 ignorado**. El `Frontend build` compiló
+`src/pages/Recalculo.tsx`, `src/lib/tauri.ts` y `src/App.tsx` sin errores de
+TypeScript; la UI quedó enlazada en `/recalculo` con selector de periodo,
+motivo obligatorio y tabla de diferencias. `cargo tauri build` generó el `.msi`.
+Se verificó que enero 2026 usa UMA 113.14 y subsidio 536.21 y que los recibos
+con `uuid_cfdi` no se modifican.
+
 ## PDF de recibo — "José Pérez Núñez"
 
 Se generó el PDF de evidencia `docs/evidencia/recibo_jose_perez.pdf` con el texto acentuado

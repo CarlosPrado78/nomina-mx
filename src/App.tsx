@@ -9,6 +9,7 @@ import ConfigPage from './pages/Configuracion';
 import AuditoriaPage from './pages/Auditoria';
 import EmpresaSelector from './pages/EmpresaSelector';
 import ImportarPage from './pages/Importar';
+import RecalculoPage from './pages/Recalculo';
 import { api } from './lib/tauri';
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
         <NavLink to="/trabajadores">Trabajadores</NavLink>
         <NavLink to="/importar">Importar CSV</NavLink>
         <NavLink to="/nomina">Nomina</NavLink>
+        <NavLink to="/recalculo">Recálculo</NavLink>
         <NavLink to="/finiquitos">Finiquitos</NavLink>
         <NavLink to="/reportes">Reportes</NavLink>
         <NavLink to="/config">Configuracion</NavLink>
@@ -39,6 +41,7 @@ export default function App() {
           <Route path="/trabajadores" element={<TrabajadoresPage />} />
           <Route path="/importar" element={<ImportarPage />} />
           <Route path="/nomina" element={<NominaPage />} />
+          <Route path="/recalculo" element={<RecalculoPage />} />
           <Route path="/finiquitos" element={<FiniquitosPage />} />
           <Route path="/reportes" element={<ReportesPage />} />
           <Route path="/config" element={<ConfigPage />} />
