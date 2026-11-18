@@ -121,7 +121,7 @@ enlazada en `/importar` con selector de archivo y descarga de plantilla.
 
 ### Verificación del ÍTEM C5 (recálculo retroactivo) en Windows
 
-Run: *(pendiente de registrar el URL del run tras el push)*
+Run: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44269152626
 con `macos-latest` y `windows-latest` en verde.
 
 `cargo test` en `windows-latest`: 22 + 5 (auditoría) + 4 (backup) + 9 + 29 +

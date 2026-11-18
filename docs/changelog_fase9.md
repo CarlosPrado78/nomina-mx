@@ -389,4 +389,8 @@ Fuentes oficiales consultadas:
   actualizado a 31 cubiertos / 40 filas.
 - `docs/pendientes_v1_1.md`: registro del CFDI de ajuste
   (`TipoDeComprobante="E"`) como Pendiente v1.1.
-- CI: *(pendiente de registrar el URL del run tras el push)*.
+- CI: https://github.com/CarlosPrado78/nomina-mx/actions/runs/44269152626
+  con `macos-latest` y `windows-latest` en verde; `Frontend build` compiló
+  `Recalculo.tsx`, `tauri.ts` y `App.tsx` sin errores de TypeScript, `Backend
+  tests` reportó **175 verdes + 1 ignorado** en ambos sistemas y `cargo tauri
+  build` generó el `.dmg` y el `.msi`.
