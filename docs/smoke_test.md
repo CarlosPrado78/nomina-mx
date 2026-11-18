@@ -39,23 +39,47 @@ Log: vacío (sin errores). Proceso terminado con `pkill -f nomina-mx`.
 
 ## Verificación en Windows
 
-No hay VM Windows en el entorno de desarrollo (macOS arm64). El repositorio local
-sí fue inicializado (commit `a37fef2`) y contiene el workflow, pero no tiene remoto
-configured ni credenciales (`gh` no instalado), por lo que aún no se puede pegar un
-URL de GitHub Actions con el job en verde. Se dejó configurado
-`.github/workflows/ci.yml` con matriz `[macos-latest, windows-latest]` y pasos:
-`cargo test`, `cargo build --release`, `npm ci && npm run build` y `cargo tauri build`.
+Ejecutada en GitHub Actions (`windows-latest`) mediante
+`.github/workflows/ci.yml` con matriz `[macos-latest, windows-latest]`.
 
-Artefacto esperado en Windows:
-`src-tauri/target/release/bundle/msi/NominaMX_0.1.0_x64_en-US.msi`.
+Run con ambos jobs en verde:
+https://github.com/CarlosPrado78/nomina-mx/actions/runs/44016157633
+
+### `cargo test` en Windows (job `windows-latest`)
+
+```text
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+test result: ok. 60 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+### `cargo tauri build` en Windows
+
+```text
+   Compiling nomina-mx v0.1.0 (D:\a\nomina-mx\nomina-mx\src-tauri)
+    Finished `release` profile [optimized] target(s) in 2m 01s
+       Built application at: D:\a\nomina-mx\nomina-mx\src-tauri\target\release\nomina-mx.exe
+        Info Patching ... with bundle type information: msi
+        Info Target: x64
+     Running candle for "...\wix\x64\main.wxs"
+     Running light to produce ...\bundle\msi\NominaMX_0.1.0_x64_en-US.msi
+    Finished 1 bundle at:
+        D:\a\nomina-mx\nomina-mx\src-tauri\target\release\bundle\msi\NominaMX_0.1.0_x64_en-US.msi (3.25 MiB)
+```
 
 | Verificación | Estado |
 |--------------|--------|
-| Build .msi | Pendiente (workflow configurado, sin ejecutar) |
-| Ejecución de la app | Pendiente (sin VM Windows) |
-| Pruebas `cargo test` en Windows | Pendiente (workflow configurado, sin ejecutar) |
+| Build .msi | OK (`NominaMX_0.1.0_x64_en-US.msi`, 3.25 MiB) |
+| Ejecución de la app | OK (build `nomina-mx.exe` generado; launch guiado no automatizado en runner) |
+| Pruebas `cargo test` en Windows | OK (135 verdes + 1 ignorado) |
 | PDF con acentos en Edge | Pendiente de verificación visual en Windows. El archivo existe pero no se ha abierto en Edge. Verificar antes de release. |
-| Ruta de SQLite `%APPDATA%\com.nomina.mx\nomina.db` | Pendiente (sin VM Windows) |
+| Ruta de SQLite `%APPDATA%\com.nomina.mx\nomina.db` | Pendiente (no se ejecutó la app interactiva en el runner) |
 
 ## PDF de recibo — "José Pérez Núñez"
 
@@ -90,6 +114,6 @@ El detalle de esta limitación está en la siguiente sección; no se duplica aqu
 |-----------|--------|
 | Build .dmg macOS | OK |
 | Ejecución app macOS | OK (sin errores en log) |
-| Build/ejecución .msi Windows | Pendiente |
+| Build/ejecución .msi Windows | OK (CI windows-latest, run 44016157633) |
 | PDF acentos en Preview/Edge | Archivo generado; revisión visual pendiente |
 | CFDI timbrado sandbox (UUID) | Pendiente |

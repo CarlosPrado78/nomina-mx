@@ -53,4 +53,5 @@ Genera `.dmg` (macOS) y `.msi` (Windows) en `src-tauri/target/release/bundle`.
 - Fase 6: COMPLETA
 - Fase 7: COMPLETA
 - Fase 8: PARCIAL (firma pendiente de certificados + checklist de puntos 1-7 pendiente; build .dmg OK, tests verdes)
-- Fase 9 (nueva): "Endurecimiento para producción" — criterios de aceptación: los puntos 1-7 del checklist de verificación (output completo de tests, corrección ISR/DOF, casos manuales A/B/C, tests CFDI ampliados, matriz de cumplimiento, smoke test con UUID de PAC y docs de operación).
+- Fase 9: COMPLETA (A1-A9). CI en GitHub Actions con matrix macOS/Windows en verde (run 44016157633). Pendiente no bloqueante para release: verificación visual del PDF con acentos en Edge y de la ruta SQLite en Windows.
+- GitHub: https://github.com/CarlosPrado78/nomina-mx
