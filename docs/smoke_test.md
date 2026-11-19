@@ -23,7 +23,14 @@ Output relevante (real):
         .../src-tauri/target/release/bundle/dmg/NominaMX_0.1.0_aarch64.dmg (2.35 MiB)
 ```
 
-Artefacto: `src-tauri/target/release/bundle/dmg/NominaMX_0.1.0_aarch64.dmg`.
+Artefacto arm64: `src-tauri/target/release/bundle/dmg/NominaMX_0.1.0_aarch64.dmg`.
+Artefacto Intel:
+`src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/NominaMX_0.1.0_x64.dmg`.
+
+**Nota de arquitectura:** la verificación macOS debe hacerse con el `.dmg`
+correspondiente a la arquitectura de la Mac. Se recomienda verificar en al menos
+una Mac Apple Silicon y una Mac Intel para cobertura completa. Comprobar con
+`uname -m` (`arm64` → `aarch64`; `x86_64` → `x64`).
 
 ## Ejecución de la app (macOS)
 
@@ -92,7 +99,10 @@ está en `/Applications/NominaMX.app` sigue siendo el **antiguo** y crashea,
 aunque el código ya esté corregido en `main`. Descargar el corregido:
 
 ```bash
-gh run download 44489870148 --repo CarlosPrado78/nomina-mx -n NominaMX-macos-latest
+uname -m   # arm64 → NominaMX-macos-arm64 ; x86_64 → NominaMX-macos-x86_64
+RUN_ID=$(gh run list --repo CarlosPrado78/nomina-mx --workflow=ci.yml --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
+gh run download "$RUN_ID" --repo CarlosPrado78/nomina-mx -n NominaMX-macos-arm64 --dir dist/macos/   # Apple Silicon
+gh run download "$RUN_ID" --repo CarlosPrado78/nomina-mx -n NominaMX-macos-x86_64 --dir dist/macos/  # Intel
 ```
 
 Desde la sesión del usuario nuevo, ejecutar `scripts/verificacion_macos.sh`:
@@ -262,7 +272,7 @@ compila y empaqueta .msi/.dmg, pero no ejecuta la app.
 
 | Paso | Resultado | Captura |
 |------|-----------|---------|
-| Descargar artefacto `NominaMX-macos-latest` del run 44489870148 (bundle corregido) | ❌ no ejecutado | — |
+| Descargar artefacto `NominaMX-macos-arm64` o `NominaMX-macos-x86_64` según `uname -m` (bundle corregido) | ❌ no ejecutado | — |
 | Instalar .dmg (Gatekeeper → clic derecho → Abrir) | ❌ no ejecutado | — |
 | Empresa → trabajador → periodo → recibo → PDF | ❌ no ejecutado | — |
 | Verificar acentos en Preview | ❌ no ejecutado | — |
@@ -312,7 +322,7 @@ ejecute el script y se completen las capturas humanas.
 | Crear usuario `VerificacionNominaMX` sin admin | - [ ] | ⏳ | — | Preferencias del Sistema → Usuarios y grupos; ver guía |
 | Iniciar sesión con ese usuario | - [ ] | ⏳ | — | Igual que el paso anterior |
 | Ejecutar `scripts/verificacion_macos.sh` | - [ ] | ⏳ | `reporte.md` | Requiere `gh` accesible y autenticado |
-| Descargar artefacto `NominaMX-macos-latest` | - [ ] | ⏳ | — | Automatizado en el script |
+| Descargar artefacto según `uname -m` (`-arm64` / `-x86_64`) | - [ ] | ⏳ | — | Automatizado en el script |
 | Instalar .dmg y superar Gatekeeper | - [ ] | ⏳ | — | `hdiutil attach` + `cp -R` + `open -a`; "Abrir de todas formas" |
 | Captura de app abierta | - [ ] | ⏳ | `macos_01_app.png` | La genera el script |
 | Verificar `~/Library/Application Support/com.nomina.mx/nomina.db` | - [ ] | ⏳ | `reporte.md` | Lo comprueba el script |

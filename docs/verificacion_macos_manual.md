@@ -33,9 +33,11 @@ cuenta habitual. No requiere Parallels.
    GH_BIN=/usr/local/bin/gh GH_TOKEN=su_token scripts/verificacion_macos.sh
    ```
 
-   El script: elige el último run verde de `ci.yml` y rechaza cualquier run
-   anterior a `44489870148` (el bundle anterior crasheaba por checksum de
-   migración), descarga `NominaMX-macos-latest`, monta el `.dmg` con
+   El script: detecta la arquitectura con `uname -m` y elige
+   `NominaMX-macos-arm64` o `NominaMX-macos-x86_64`, elige el último run verde
+   de `ci.yml` y rechaza cualquier run anterior a `44489870148` (el bundle
+   anterior crasheaba por checksum de migración), descarga el `.dmg` a
+   `dist/macos/`, valida la arquitectura del ejecutable, lo monta con
    `hdiutil`, **reemplaza** `NominaMX.app` en `/Applications`, la abre, espera
    5 segundos, guarda `macos_01_app.png`, verifica
    `~/Library/Application Support/com.nomina.mx/nomina.db` y escribe

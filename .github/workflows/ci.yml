@@ -37,15 +37,47 @@ jobs:
         working-directory: src-tauri
         run: cargo build --release
 
-      - name: Tauri bundle (.dmg on macOS, .msi on Windows)
+      # --- macOS: bundles arm64 (default del runner) y x86_64 (Intel) ---
+      - name: Add Intel target
+        if: matrix.os == 'macos-latest'
+        run: rustup target add x86_64-apple-darwin
+
+      - name: Tauri bundle (arm64)
+        if: matrix.os == 'macos-latest'
         working-directory: src-tauri
         run: cargo tauri build
 
-      - name: Upload bundle artifact
+      - name: Tauri bundle (x86_64)
+        if: matrix.os == 'macos-latest'
+        working-directory: src-tauri
+        run: cargo tauri build --target x86_64-apple-darwin
+
+      - name: Upload macos arm64 bundle
+        if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: NominaMX-${{ matrix.os }}
-          path: |
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/msi/*.msi
+          name: NominaMX-macos-arm64
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+      - name: Upload macos x86_64 bundle
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: NominaMX-macos-x86_64
+          path: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+      # --- Windows: sin cambios (solo .msi) ---
+      - name: Tauri bundle (.msi on Windows)
+        if: matrix.os == 'windows-latest'
+        working-directory: src-tauri
+        run: cargo tauri build
+
+      - name: Upload windows bundle
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: NominaMX-windows-latest
+          path: src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: warn

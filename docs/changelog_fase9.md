@@ -525,3 +525,28 @@ con macOS y Windows en verde.
   Siguen pendientes la verificación visual de P0-C con el bundle corregido y la
   decisión de entorno para la verificación manual en Windows. No se crea tag
   `v0.9.0`, Release ni piloto.
+
+---
+
+## Soporte para macOS Intel (x86_64)
+
+- **Motivo:** la Mac secundaria de verificación es Intel y no podía ejecutar el
+  `.dmg` arm64. El bundle arm64 existente no se elimina: ambos coexisten en
+  directorios separados.
+- **Compilación local:** `rustup target add x86_64-apple-darwin` y
+  `cargo tauri build --target x86_64-apple-darwin` generaron
+  `NominaMX_0.1.0_x64.dmg` (3,600,405 bytes ≈ 3.43 MiB) en
+  `src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/`. El arm64 sigue en
+  `src-tauri/target/release/bundle/dmg/NominaMX_0.1.0_aarch64.dmg`
+  (3,405,540 bytes ≈ 3.25 MiB).
+- **Arquitectura verificada** montando ambos `.dmg`: el ejecutable arm64 es
+  `Mach-O 64-bit executable arm64` y el de Intel es
+  `Mach-O 64-bit executable x86_64`.
+- **CI:** el job macOS compila y publica dos artefactos,
+  `NominaMX-macos-arm64` y `NominaMX-macos-x86_64`; Windows sigue publicando
+  `NominaMX-windows-latest` sin cambios.
+- **Scripts y docs:** `scripts/verificacion_macos.sh` detecta `uname -m`, elige
+  el artefacto correcto y valida la arquitectura del binario dentro del `.dmg`;
+  se actualizaron `scripts/empaquetar_release.sh`, las notas de versión, el
+  manual de usuario, la guía de P0-C y `docs/smoke_test.md`.
+- No se crea tag `v0.9.0` ni se inicia el piloto.

@@ -50,9 +50,26 @@
 
 ## Requisitos
 
-- macOS 11 o superior (bundle `aarch64`).
+- macOS 11 o superior (bundles `aarch64` y `x64`, según la Mac).
 - Windows 10 o superior (bundle `x64`).
 - No se requiere conexión a Internet para calcular.
+
+## Arquitecturas disponibles
+
+| Archivo | Arquitectura | Equipo |
+|---------|--------------|--------|
+| `NominaMX_0.1.0_aarch64.dmg` | Apple Silicon (`arm64`) | Mac M1/M2/M3/M4 |
+| `NominaMX_0.1.0_x64.dmg` | Intel (`x86_64`) | Mac con procesador Intel |
+
+Para elegir el instalador correcto, abrir el menú Apple → **Acerca de esta Mac**
+y revisar el campo **Chip / Procesador**. Si dice Apple M1, M2, M3 o M4, usar
+`aarch64`; si dice Intel, usar `x64`. En Terminal también se puede comprobar con
+`uname -m` (`arm64` o `x86_64`) o con `file NominaMX.app/Contents/MacOS/nomina-mx`.
+
+Los dos `.dmg` se publican como artefactos separados en el CI:
+`NominaMX-macos-arm64` y `NominaMX-macos-x86_64`. El bundle Intel se ejecuta en
+Apple Silicon mediante Rosetta 2, pero para P0-C se usa el bundle nativo de la
+arquitectura de cada Mac.
 
 ## Instalación y avisos del sistema
 

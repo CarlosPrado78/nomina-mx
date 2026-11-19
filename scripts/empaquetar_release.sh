@@ -51,7 +51,8 @@ descargar() {
   fi
 }
 
-descargar 'NominaMX-macos-latest'
+descargar 'NominaMX-macos-arm64'
+descargar 'NominaMX-macos-x86_64'
 descargar 'NominaMX-windows-latest'
 
 echo ""

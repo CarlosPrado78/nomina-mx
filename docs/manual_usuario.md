@@ -8,8 +8,11 @@ no envía datos a Internet para calcular.
 
 ### macOS
 
-1. Descargue `NominaMX_0.1.0_aarch64.dmg` desde el artefacto
-   `NominaMX-macos-latest` del run de GitHub Actions indicado por soporte.
+1. Compruebe la arquitectura en el menú Apple → **Acerca de esta Mac** (o con
+   `uname -m`). Descargue `NominaMX_0.1.0_aarch64.dmg` desde el artefacto
+   `NominaMX-macos-arm64` si es Apple Silicon, o `NominaMX_0.1.0_x64.dmg` desde
+   `NominaMX-macos-x86_64` si es Intel, del run de GitHub Actions indicado por
+   soporte.
 2. Abra el `.dmg` y arrastre **NominaMX.app** a la carpeta **Aplicaciones**.
 3. La primera vez, macOS puede impedir la apertura porque la aplicación aún no
    tiene firma de código. Haga clic derecho sobre la app y elija **Abrir**, o
