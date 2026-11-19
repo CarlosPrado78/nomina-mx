@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/tauri';
+import { Campo } from '../components/Campo';
 
 interface RegistroAuditoria {
   id: number;
@@ -87,49 +88,74 @@ export default function AuditoriaPage() {
       </p>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
-        <select
-          aria-label="Tabla"
-          className="border rounded p-2"
-          value={filtros.tabla ?? ''}
-          onChange={(e) => cambiar('tabla', e.target.value)}
+        <Campo
+          id="auditoria-tabla"
+          label="Tabla"
+          hint="Tabla de la base de datos donde ocurrió el cambio."
         >
-          <option value="">Todas las tablas</option>
-          {TABLAS.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-        <select
-          aria-label="Operación"
-          className="border rounded p-2"
-          value={filtros.operacion ?? ''}
-          onChange={(e) => cambiar('operacion', e.target.value)}
+          <select
+            className="border rounded p-2 w-full"
+            value={filtros.tabla ?? ''}
+            onChange={(e) => cambiar('tabla', e.target.value)}
+          >
+            <option value="">Todas las tablas</option>
+            {TABLAS.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </Campo>
+        <Campo
+          id="auditoria-operacion"
+          label="Operación"
+          hint="Alta (INSERT), cambio (UPDATE), baja (DELETE) o recálculo (RECALCULO)."
         >
-          <option value="">Todas las operaciones</option>
-          {OPERACIONES.map((o) => (
-            <option key={o} value={o}>{o}</option>
-          ))}
-        </select>
-        <input
-          aria-label="Usuario"
-          className="border rounded p-2"
-          placeholder="Usuario"
-          value={filtros.usuario ?? ''}
-          onChange={(e) => cambiar('usuario', e.target.value)}
-        />
-        <input
-          aria-label="Desde"
-          type="date"
-          className="border rounded p-2"
-          value={filtros.fecha_desde ?? ''}
-          onChange={(e) => cambiar('fecha_desde', e.target.value)}
-        />
-        <input
-          aria-label="Hasta"
-          type="date"
-          className="border rounded p-2"
-          value={filtros.fecha_hasta ?? ''}
-          onChange={(e) => cambiar('fecha_hasta', e.target.value)}
-        />
+          <select
+            className="border rounded p-2 w-full"
+            value={filtros.operacion ?? ''}
+            onChange={(e) => cambiar('operacion', e.target.value)}
+          >
+            <option value="">Todas las operaciones</option>
+            {OPERACIONES.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </Campo>
+        <Campo
+          id="auditoria-usuario"
+          label="Usuario"
+          hint="Usuario de auditoría que hizo el cambio. Ejemplo: system."
+        >
+          <input
+            className="border rounded p-2 w-full"
+            placeholder="system"
+            value={filtros.usuario ?? ''}
+            onChange={(e) => cambiar('usuario', e.target.value)}
+          />
+        </Campo>
+        <Campo
+          id="auditoria-desde"
+          label="Fecha desde"
+          hint="Primer día del rango, en UTC. Formato AAAA-MM-DD."
+        >
+          <input
+            type="date"
+            className="border rounded p-2 w-full"
+            value={filtros.fecha_desde ?? ''}
+            onChange={(e) => cambiar('fecha_desde', e.target.value)}
+          />
+        </Campo>
+        <Campo
+          id="auditoria-hasta"
+          label="Fecha hasta"
+          hint="Último día del rango, en UTC. Formato AAAA-MM-DD."
+        >
+          <input
+            type="date"
+            className="border rounded p-2 w-full"
+            value={filtros.fecha_hasta ?? ''}
+            onChange={(e) => cambiar('fecha_hasta', e.target.value)}
+          />
+        </Campo>
       </div>
 
       {error && <p className="text-red-600 mb-2">{error}</p>}

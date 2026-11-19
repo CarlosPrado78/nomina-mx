@@ -22,7 +22,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow p-4 flex flex-wrap items-center gap-4">
-        <NavLink to="/" className="font-bold">NominaMX</NavLink>
         <NavLink to="/empresa">Empresa</NavLink>
         <NavLink to="/trabajadores">Trabajadores</NavLink>
         <NavLink to="/importar">Importar CSV</NavLink>
@@ -33,6 +32,12 @@ export default function App() {
         <NavLink to="/config">Configuracion</NavLink>
         <NavLink to="/auditoria">Auditoría</NavLink>
         <EmpresaSelector />
+        <div className="ml-auto flex flex-col items-end leading-tight">
+          <NavLink to="/" className="font-bold">NominaMX</NavLink>
+          <p className="text-xs text-muted-foreground">
+            Developed by Carlos G. Prado Cabrera
+          </p>
+        </div>
       </nav>
       <main className="p-6">
         <Routes>

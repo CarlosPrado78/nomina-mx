@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/tauri';
 import { useAppStore } from '../lib/store';
 import { BotonDescargarRecibo } from '../components/ReciboPDF';
+import { Campo } from '../components/Campo';
+import { JORNADAS_LABORALES, TIPOS_PERIODO } from '../lib/catalogos';
+
+const CLASE_CONTROL = 'border p-2 rounded w-full';
 
 export default function NominaPage() {
   const [trabajadores, setTrabajadores] = useState<any[]>([]);
@@ -27,6 +31,12 @@ export default function NominaPage() {
     setPeriodoId(null);
     api.listarTrabajadores(1).then(setTrabajadores).catch(console.error);
   }, [reloadKey]);
+
+  const cambiarTipo = (valor: string) => {
+    setTipo(valor);
+    const configurado = TIPOS_PERIODO.find((p) => p.value === valor);
+    if (configurado) setDias(configurado.dias);
+  };
 
   const crearPeriodo = async () => {
     const id = await api.guardarPeriodo({
@@ -61,44 +71,124 @@ export default function NominaPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Captura de periodo de nomina</h1>
-      <div className="grid grid-cols-4 gap-3 mb-4">
-        <select value={tipo} onChange={(e) => setTipo(e.target.value)} className="border p-2 rounded">
-          <option value="semanal">Semanal</option>
-          <option value="quincenal">Quincenal</option>
-          <option value="mensual">Mensual</option>
-        </select>
-        <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="border p-2 rounded" />
-        <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="border p-2 rounded" />
-        <input type="date" value={fechaPago} onChange={(e) => setFechaPago(e.target.value)} className="border p-2 rounded" />
-        <input type="number" value={dias} onChange={(e) => setDias(Number(e.target.value))} className="border p-2 rounded" placeholder="Dias" />
+      <h1 className="text-xl font-bold mb-1">Captura de periodo de nómina</h1>
+      <p className="text-sm text-gray-600 mb-4">
+        Capture primero el periodo y luego elija a los trabajadores. Todas las fechas van en
+        formato AAAA-MM-DD y los importes en pesos mexicanos.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+        <Campo
+          id="periodo-tipo"
+          label="Tipo de periodo"
+          hint="Semanal = 7 días, quincenal = 15, decenal = 10 y mensual = 30."
+        >
+          <select value={tipo} onChange={(e) => cambiarTipo(e.target.value)} className={CLASE_CONTROL}>
+            {TIPOS_PERIODO.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+          </select>
+        </Campo>
+
+        <Campo
+          id="periodo-fecha-inicio"
+          label="Fecha de inicio del periodo"
+          hint="Primer día del periodo que se va a pagar. Ej. si la quincena es del 1 al 15 de enero, esta fecha es 2026-01-01."
+        >
+          <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className={CLASE_CONTROL} />
+        </Campo>
+
+        <Campo
+          id="periodo-fecha-fin"
+          label="Fecha de fin del periodo"
+          hint="Último día del periodo que se va a pagar. Ej. si la quincena es del 1 al 15 de enero, esta fecha es 2026-01-15."
+        >
+          <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className={CLASE_CONTROL} />
+        </Campo>
+
+        <Campo
+          id="periodo-fecha-pago"
+          label="Fecha de pago"
+          hint="Día en que se le paga al trabajador. Puede ser igual o posterior a la fecha de fin del periodo."
+        >
+          <input type="date" value={fechaPago} onChange={(e) => setFechaPago(e.target.value)} className={CLASE_CONTROL} />
+        </Campo>
       </div>
-      <div className="grid grid-cols-4 gap-3 mb-4 border-t pt-3">
-        <input type="number" value={horasExtra} onChange={(e) => setHorasExtra(Number(e.target.value))} className="border p-2 rounded" placeholder="Horas extra" min="0" step="0.5" />
-        <input type="number" value={semanasExtra} onChange={(e) => setSemanasExtra(Number(e.target.value))} className="border p-2 rounded" placeholder="Semanas con extras" min="1" />
-        <select value={jornadaExtra} onChange={(e) => setJornadaExtra(e.target.value)} className="border p-2 rounded">
-          <option value="diurna">Jornada diurna</option>
-          <option value="nocturna">Jornada nocturna</option>
-          <option value="mixta">Jornada mixta</option>
-        </select>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={salarioMinimo} onChange={(e) => setSalarioMinimo(e.target.checked)} />
-          Salario mínimo (ISR 93 I)
-        </label>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4 border-t pt-3">
+        <Campo
+          id="periodo-dias"
+          label="Días pagados (calculado)"
+          hint="Calculado automáticamente a partir del tipo de periodo (quincenal = 15 días). No se edita."
+        >
+          <input readOnly value={dias} className={`${CLASE_CONTROL} bg-gray-100`} placeholder="15" />
+        </Campo>
+
+        <Campo
+          id="periodo-horas-extra"
+          label="Horas extraordinarias (horas)"
+          hint="Total de horas extra del periodo. Use 0 si no hay. Se pagan dobles o triples según el día."
+        >
+          <input type="number" value={horasExtra} onChange={(e) => setHorasExtra(Number(e.target.value))} className={CLASE_CONTROL} placeholder="0" min="0" step="0.5" />
+        </Campo>
+
+        <Campo
+          id="periodo-semanas-extra"
+          label="Semanas con horas extra"
+          hint="Número de semanas del periodo en que se repitieron esas horas. Jornada completa = 1."
+        >
+          <input type="number" value={semanasExtra} onChange={(e) => setSemanasExtra(Number(e.target.value))} className={CLASE_CONTROL} placeholder="1" min="1" />
+        </Campo>
+
+        <Campo
+          id="periodo-jornada-extra"
+          label="Jornada de las horas extra"
+          hint="Turno en que se trabajaron: diurna, nocturna o mixta; define el factor de pago."
+        >
+          <select value={jornadaExtra} onChange={(e) => setJornadaExtra(e.target.value)} className={CLASE_CONTROL}>
+            {JORNADAS_LABORALES.filter((j) => ['diurna', 'nocturna', 'mixta'].includes(j.value)).map((j) => (
+              <option key={j.value} value={j.value}>{j.label}</option>
+            ))}
+          </select>
+        </Campo>
+
+        <Campo
+          id="periodo-salario-minimo"
+          label="Horas extra al salario mínimo (ISR 93 I)"
+          hint="Marque la casilla solo si las horas extra se pagan con el salario mínimo y aplica la exención del artículo 93 fracción I de la LISR."
+        >
+          <input type="checkbox" checked={salarioMinimo} onChange={(e) => setSalarioMinimo(e.target.checked)} className="h-4 w-4" />
+        </Campo>
       </div>
+
       <button onClick={crearPeriodo} className="bg-gray-600 text-white p-2 rounded mb-4">Crear periodo</button>
       {periodoId && <span className="ml-2">Periodo #{periodoId}</span>}
 
-      <h2 className="font-bold mt-4">Seleccionar trabajadores</h2>
-      <div className="space-y-1 mb-4">
-        {trabajadores.map((t: any) => (
-          <label key={t.id} className="flex items-center gap-2">
-            <input type="checkbox" checked={seleccionados.includes(t.id)} onChange={() => toggle(t.id)} />
-            {t.nombre} - {t.salario_diario}
-          </label>
-        ))}
+      <div className="mt-4">
+        <p id="trabajadores-a-incluir-label" className="font-bold">Trabajadores a incluir</p>
+        <p id="trabajadores-a-incluir-hint" className="text-xs text-gray-500 mb-2">
+          Marque cada trabajador que debe aparecer en este periodo. Puede seleccionar varios.
+        </p>
+        <div className="space-y-1 mb-4" role="group" aria-labelledby="trabajadores-a-incluir-label" aria-describedby="trabajadores-a-incluir-hint">
+          {trabajadores.map((t: any) => (
+            <div key={t.id} className="flex flex-col">
+              <label htmlFor={`trabajador-${t.id}`} className="flex items-center gap-2">
+                <input
+                  id={`trabajador-${t.id}`}
+                  aria-describedby={`trabajador-${t.id}-hint`}
+                  type="checkbox"
+                  checked={seleccionados.includes(t.id)}
+                  onChange={() => toggle(t.id)}
+                />
+                {t.nombre} — salario diario {t.salario_diario} pesos
+              </label>
+              <p id={`trabajador-${t.id}-hint`} className="text-xs text-gray-500 ml-6">
+                Se incluirá en el cálculo de este periodo si está marcado.
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
-      <button onClick={calcular} className="bg-blue-600 text-white p-2 rounded">Calcular nomina</button>
+
+      <button onClick={calcular} className="bg-blue-600 text-white p-2 rounded">Calcular nómina</button>
 
       {resultados.length > 0 && (
         <table className="w-full border mt-6 text-sm">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, type ResultadoRecalculo } from '../lib/tauri';
 import { useAppStore } from '../lib/store';
+import { Campo } from '../components/Campo';
 
 interface Periodo {
   id: number;
@@ -88,8 +89,11 @@ export default function RecalculoPage() {
       </p>
 
       <div className="grid md:grid-cols-2 gap-4 mb-4">
-        <label className="block">
-          <span className="text-sm font-semibold">Periodo</span>
+        <Campo
+          id="recalculo-periodo"
+          label="Periodo a recalcular"
+          hint="Elija el periodo de la lista (incluye cerrados y abiertos). Se usarán los parámetros vigentes en su fecha de pago original."
+        >
           <select
             className="border rounded p-2 w-full"
             value={periodoId ?? ''}
@@ -105,16 +109,21 @@ export default function RecalculoPage() {
               </option>
             ))}
           </select>
-        </label>
-        <label className="block">
-          <span className="text-sm font-semibold">Motivo (obligatorio)</span>
-          <input
+        </Campo>
+
+        <Campo
+          id="recalculo-motivo"
+          label="Motivo del recálculo (obligatorio)"
+          hint="Explicar por qué se recalcula: cambio de salario, corrección de error, ajuste de UMA, etc. Queda registrado en el log de auditoría."
+        >
+          <textarea
             className="border rounded p-2 w-full"
+            rows={3}
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             placeholder="Ej. Corrección de salario posterior al cierre"
           />
-        </label>
+        </Campo>
       </div>
 
       {periodo && (
@@ -134,17 +143,23 @@ export default function RecalculoPage() {
         >
           {procesando ? 'Recalculando…' : 'Recalcular periodo completo'}
         </button>
-        <select
-          aria-label="Trabajador individual"
-          className="border rounded p-2"
-          value={trabajadorId ?? ''}
-          onChange={(e) => setTrabajadorId(e.target.value ? Number(e.target.value) : null)}
+        <Campo
+          id="recalculo-trabajador"
+          label="Trabajador individual (opcional)"
+          hint="Seleccione un trabajador para recalcular solo su recibo dentro del periodo elegido."
+          className="min-w-56"
         >
-          <option value="">Trabajador (opcional)…</option>
-          {trabajadores.map((t) => (
-            <option key={t.id} value={t.id}>{t.nombre}</option>
-          ))}
-        </select>
+          <select
+            className="border rounded p-2"
+            value={trabajadorId ?? ''}
+            onChange={(e) => setTrabajadorId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">Trabajador (opcional)…</option>
+            {trabajadores.map((t) => (
+              <option key={t.id} value={t.id}>{t.nombre}</option>
+            ))}
+          </select>
+        </Campo>
         <button
           type="button"
           disabled={!periodoId || !trabajadorId || procesando}

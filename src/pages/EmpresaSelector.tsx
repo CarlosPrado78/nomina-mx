@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/tauri';
 import { useAppStore } from '../lib/store';
+import { Campo } from '../components/Campo';
 
 interface Empresa {
   id: number | null;
@@ -75,21 +76,25 @@ export default function EmpresaSelector() {
   };
 
   return (
-    <div className="flex items-center gap-2 text-sm ml-auto">
-      <label htmlFor="empresa-selector">Empresa:</label>
-      <select
+    <div className="flex items-center gap-2 text-sm">
+      <Campo
         id="empresa-selector"
-        aria-label="Empresa activa"
-        className="border rounded p-1"
-        value={activaId ?? ''}
-        onChange={(e) => cambiar(Number(e.target.value))}
+        label="Empresa activa"
+        hint="Empresa cuyos datos se muestran en todas las pantallas."
+        className="min-w-52"
       >
-        {empresas.map((e) => (
-          <option key={e.id ?? 0} value={e.id ?? 0}>
-            {e.razon_social} ({e.rfc})
-          </option>
-        ))}
-      </select>
+        <select
+          className="border rounded p-1 w-full"
+          value={activaId ?? ''}
+          onChange={(e) => cambiar(Number(e.target.value))}
+        >
+          {empresas.map((e) => (
+            <option key={e.id ?? 0} value={e.id ?? 0}>
+              {e.razon_social} ({e.rfc})
+            </option>
+          ))}
+        </select>
+      </Campo>
       <button
         type="button"
         className="border rounded px-2 py-1"
@@ -98,24 +103,36 @@ export default function EmpresaSelector() {
         + Nueva
       </button>
       {mostrarAlta && (
-        <span className="flex items-center gap-1">
-          <input
-            className="border rounded p-1"
-            placeholder="RFC"
-            aria-label="RFC de la nueva empresa"
-            value={nueva.rfc}
-            onChange={(e) => setNueva({ ...nueva, rfc: e.target.value.toUpperCase() })}
-          />
-          <input
-            className="border rounded p-1"
-            placeholder="Razón social"
-            aria-label="Razón social de la nueva empresa"
-            value={nueva.razon_social}
-            onChange={(e) => setNueva({ ...nueva, razon_social: e.target.value })}
-          />
+        <span className="flex items-start gap-2">
+          <Campo
+            id="nueva-empresa-rfc"
+            label="RFC de la nueva empresa"
+            hint="13 caracteres. Ejemplo: XAXX010101000."
+            className="min-w-40"
+          >
+            <input
+              className="border rounded p-1 w-full"
+              placeholder="XAXX010101000"
+              value={nueva.rfc}
+              onChange={(e) => setNueva({ ...nueva, rfc: e.target.value.toUpperCase() })}
+            />
+          </Campo>
+          <Campo
+            id="nueva-empresa-razon-social"
+            label="Razón social de la nueva empresa"
+            hint="Nombre legal del empleador. Ejemplo: Mi Empresa S.A. de C.V."
+            className="min-w-52"
+          >
+            <input
+              className="border rounded p-1 w-full"
+              placeholder="Mi Empresa S.A. de C.V."
+              value={nueva.razon_social}
+              onChange={(e) => setNueva({ ...nueva, razon_social: e.target.value })}
+            />
+          </Campo>
           <button
             type="button"
-            className="bg-blue-600 text-white rounded px-2 py-1"
+            className="bg-blue-600 text-white rounded px-2 py-1 mt-6"
             onClick={crear}
           >
             Guardar

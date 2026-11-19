@@ -550,3 +550,38 @@ con macOS y Windows en verde.
   se actualizaron `scripts/empaquetar_release.sh`, las notas de versión, el
   manual de usuario, la guía de P0-C y `docs/smoke_test.md`.
 - No se crea tag `v0.9.0` ni se inicia el piloto.
+
+---
+
+## UI: etiquetas claras en formularios + crédito de desarrollador
+
+Fecha: 2026-11-19.
+
+- Se auditaron todas las pantallas con formularios: Empresa, Trabajadores,
+  Nomina, Finiquitos, Recalculo, Auditoria, EmpresaSelector e Importar CSV.
+  Esta última no tiene campos de captura (el archivo se elige en un diálogo
+  nativo), por lo que no había etiquetas que corregir.
+- Nuevo componente `src/components/Campo.tsx`: inyecta `id` y
+  `aria-describedby` al control, y renderiza `<label>` en español, placeholder
+  de ejemplo y ayuda de una línea. Catálogos compartidos en
+  `src/lib/catalogos.ts` para estados de la República, regímenes fiscales,
+  contratos, jornadas, periodos y tipos de separación.
+- Fechas con etiqueta explícita (inicio, fin, pago, nacimiento, ingreso, baja,
+  desde, hasta) y formato `AAAA-MM-DD` en la ayuda. Numéricos con unidad:
+  pesos, días, horas, años y porcentaje. **Días pagados** ahora es un valor
+  calculado y no editable. **Motivo del recálculo** pasó de input a textarea
+  obligatorio con ayuda.
+- Header: bajo **NominaMX**, en la esquina superior derecha,
+  `Developed by Carlos G. Prado Cabrera` con
+  `className="text-xs text-muted-foreground"`. Se agregó el color
+  `muted.foreground` a `tailwind.config.js`; el selector de empresa dejó de
+  empujar con `ml-auto` para no duplicar alineaciones en macOS y Windows.
+- Tests: nuevo `src/ui_labels.test.tsx` recorre cada pantalla y exige `id`,
+  `<label for>`, `aria-describedby` con elemento existente y placeholder en
+  textos y números, además de verificar el crédito del header. `pnpm test`:
+  19 tests verdes; `tsc --noEmit` OK; `pnpm build` OK.
+- Documentación: `docs/manual_usuario.md` describe etiqueta, ejemplo y ayuda de
+  cada campo, e indica que las capturas se tomarán al reinstalar el `.dmg` en
+  Mac Intel.
+- Sigue pendiente la verificación visual de P0-C con el nuevo bundle y la
+  verificación manual de Windows. No se crea tag `v0.9.0` ni se inicia piloto.

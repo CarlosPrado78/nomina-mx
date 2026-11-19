@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '../lib/tauri';
 import { useAppStore } from '../lib/store';
+import { Campo } from '../components/Campo';
+import { ESTADOS_REPUBLICA, REGIMENES_FISCALES } from '../lib/catalogos';
 
 const schema = z.object({
   rfc: z.string().min(12),
@@ -15,6 +17,8 @@ const schema = z.object({
   prima_riesgo_trabajo: z.coerce.number(),
   registro_patronal_imss: z.string(),
 });
+
+const CLASE_CONTROL = 'border p-2 rounded w-full';
 
 export default function EmpresaPage() {
   const { register, handleSubmit, reset } = useForm({ resolver: zodResolver(schema) });
@@ -32,18 +36,88 @@ export default function EmpresaPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 max-w-3xl">
-      <h1 className="col-span-2 text-xl font-bold">Configuracion de empresa</h1>
-      <input placeholder="RFC" {...register('rfc')} className="border p-2 rounded" />
-      <input placeholder="Razon social" {...register('razon_social')} className="border p-2 rounded" />
-      <input placeholder="Regimen fiscal" {...register('regimen_fiscal')} className="border p-2 rounded" />
-      <input placeholder="CP" {...register('cp')} className="border p-2 rounded" />
-      <input placeholder="Estado ISN" {...register('estado_isn')} className="border p-2 rounded" />
-      <input placeholder="Tasa ISN %" {...register('tasa_isn')} className="border p-2 rounded" />
-      <input placeholder="Prima riesgo trabajo %" {...register('prima_riesgo_trabajo')} className="border p-2 rounded" />
-      <input placeholder="Registro patronal IMSS" {...register('registro_patronal_imss')} className="border p-2 rounded" />
-      <button type="submit" className="col-span-2 bg-blue-600 text-white p-2 rounded">Guardar</button>
-      {msg && <span className="col-span-2 text-green-600">{msg}</span>}
+    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+      <h1 className="col-span-full text-xl font-bold">Configuración de empresa</h1>
+      <p className="col-span-full text-sm text-gray-600">
+        Capture los datos fiscales de la empresa. Todos los campos muestran un ejemplo y una
+        explicación debajo; los catálogos se eligen de una lista.
+      </p>
+
+      <Campo
+        id="empresa-rfc"
+        label="RFC de la empresa"
+        hint="13 caracteres para persona moral. Para pruebas use XAXX010101000."
+      >
+        <input {...register('rfc')} className={CLASE_CONTROL} placeholder="XAXX010101000" />
+      </Campo>
+
+      <Campo
+        id="empresa-razon-social"
+        label="Razón social"
+        hint="Nombre legal de la empresa, tal como aparece en su constancia de situación fiscal."
+      >
+        <input {...register('razon_social')} className={CLASE_CONTROL} placeholder="Mi Empresa S.A. de C.V." />
+      </Campo>
+
+      <Campo
+        id="empresa-regimen-fiscal"
+        label="Régimen fiscal (clave SAT)"
+        hint="601 = General de Ley Personas Morales, 605 = Sueldos y Salarios, 612 = Personas Físicas con Actividades Empresariales"
+      >
+        <select {...register('regimen_fiscal')} className={CLASE_CONTROL}>
+          {REGIMENES_FISCALES.map((r) => (
+            <option key={r.value} value={r.value}>{r.label}</option>
+          ))}
+        </select>
+      </Campo>
+
+      <Campo
+        id="empresa-cp"
+        label="Código postal"
+        hint="5 dígitos del domicilio fiscal de la empresa. Ejemplo: 01000."
+      >
+        <input {...register('cp')} inputMode="numeric" className={CLASE_CONTROL} placeholder="01000" />
+      </Campo>
+
+      <Campo
+        id="empresa-estado-isn"
+        label="Estado de la República"
+        hint="Entidad federativa donde se calcula el ISN. Elija de la lista; no es texto libre."
+      >
+        <select {...register('estado_isn')} className={CLASE_CONTROL}>
+          <option value="">Seleccione un estado…</option>
+          {ESTADOS_REPUBLICA.map((estado) => (
+            <option key={estado} value={estado}>{estado}</option>
+          ))}
+        </select>
+      </Campo>
+
+      <Campo
+        id="empresa-tasa-isn"
+        label="Tasa de ISN (%)"
+        hint="Porcentaje del impuesto sobre nóminas de esa entidad. Ejemplo: 3 para 3%."
+      >
+        <input {...register('tasa_isn')} type="number" step="0.01" min="0" className={CLASE_CONTROL} placeholder="3" />
+      </Campo>
+
+      <Campo
+        id="empresa-prima-riesgo"
+        label="Prima de riesgo de trabajo (%)"
+        hint="Prima anual de riesgo de trabajo. Oscila entre 0.5% (mínima) y 15% (máxima). Si es la primera vez, usar 0.5%."
+      >
+        <input {...register('prima_riesgo_trabajo')} type="number" step="0.01" min="0.5" max="15" className={CLASE_CONTROL} placeholder="0.5" />
+      </Campo>
+
+      <Campo
+        id="empresa-registro-patronal"
+        label="Registro patronal IMSS"
+        hint="Opcional. Si no lo tienes, dejar vacío."
+      >
+        <input {...register('registro_patronal_imss')} className={CLASE_CONTROL} placeholder="A1234567890" />
+      </Campo>
+
+      <button type="submit" className="col-span-full bg-blue-600 text-white p-2 rounded">Guardar empresa</button>
+      {msg && <span className="col-span-full text-green-600">{msg}</span>}
     </form>
   );
 }
