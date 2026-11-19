@@ -476,3 +476,7 @@ Fuentes oficiales consultadas:
   (usuario nuevo, 30-45 min) mediante `scripts/verificacion_macos.sh`.
 - **P1:** Windows con opciones documentadas y decisión pendiente del
   desarrollador. Sin tag `v0.9.0` ni piloto.
+- Guías manuales para ejecutar P0-C y P1 sin automatización:
+  `docs/verificacion_macos_manual.md` y
+  `docs/verificacion_windows_manual.md`. `docs/smoke_test.md` referencia ambas
+  guías y usa tablas con checkbox.

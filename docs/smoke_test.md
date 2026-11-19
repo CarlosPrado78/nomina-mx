@@ -215,8 +215,8 @@ contienen capturas porque no hubo entorno limpio utilizable.
 
 ### Verificación visual — macOS (usuario nuevo)
 
-**Estado: BLOQUEANTE — ⏳ pendiente de ejecución por el desarrollador
-(usuario nuevo macOS, 30-45 min).**
+**Estado: ⏳ Pendiente de ejecución manual (usuario nuevo Mac, 30-45 min).
+Guía en `docs/verificacion_macos_manual.md`.**
 El bloqueo anterior (`sudo: a password is required`) ya no es el problema de
 fondo: se generó un script que el desarrollador debe ejecutar **dentro** de la
 cuenta nueva, donde sí podrá crear y usar el usuario sin depender del agente.
@@ -236,19 +236,20 @@ Restricción vigente: este agente no puede iniciar sesión con otro usuario ni
 hacer clicks en la app; por eso el estado permanece bloqueante hasta que se
 ejecute el script y se completen las capturas humanas.
 
-| Paso | Resultado | Captura | Notas |
-|------|-----------|---------|-------|
-| Crear usuario `VerificacionNominaMX` sin admin | ⏳ | — | Debe hacerlo el desarrollador desde Preferencias del Sistema |
-| Iniciar sesión con ese usuario | ⏳ | — | Igual que el paso anterior |
-| Descargar artefacto `NominaMX-macos-latest` | ⏳ | — | Automatizado en `scripts/verificacion_macos.sh` |
-| Instalar .dmg y abrir con Gatekeeper | ⏳ | — | Automatizado: `hdiutil attach` + `cp -R` + `open -a` |
-| Captura de app abierta | ⏳ | `macos_01_app.png` | La genera el script |
-| Verificar `~/Library/Application Support/com.nomina.mx/nomina.db` | ⏳ | `reporte.md` | Lo comprueba el script |
-| Crear empresa RFC `XAXX010101000`, régimen 601 | ⏳ | `macos_02_*` | Flujo manual con clicks humanos |
-| Alta de José Pérez Núñez | ⏳ | `macos_02_trabajador.png` | Flujo manual |
-| Periodo quincenal enero 2026 y recibo | ⏳ | `macos_03_recibo.png` | Flujo manual |
-| Click en **Descargar PDF** → archivo se descarga → abrir en Preview → verificar acentos | ⏳ | `macos_04_pdf_acentos.png` | Botón enlazado en P0-A (`src/pages/Nomina.tsx`); verificar `José Pérez Núñez` |
-| Captura de la ruta de la BD | ⏳ | `macos_05_bd_ruta.png` | Flujo manual |
+| Paso | Checklist | Resultado | Captura | Notas |
+|------|-----------|-----------|---------|-------|
+| Crear usuario `VerificacionNominaMX` sin admin | - [ ] | ⏳ | — | Preferencias del Sistema → Usuarios y grupos; ver guía |
+| Iniciar sesión con ese usuario | - [ ] | ⏳ | — | Igual que el paso anterior |
+| Ejecutar `scripts/verificacion_macos.sh` | - [ ] | ⏳ | `reporte.md` | Requiere `gh` accesible y autenticado |
+| Descargar artefacto `NominaMX-macos-latest` | - [ ] | ⏳ | — | Automatizado en el script |
+| Instalar .dmg y superar Gatekeeper | - [ ] | ⏳ | — | `hdiutil attach` + `cp -R` + `open -a`; "Abrir de todas formas" |
+| Captura de app abierta | - [ ] | ⏳ | `macos_01_app.png` | La genera el script |
+| Verificar `~/Library/Application Support/com.nomina.mx/nomina.db` | - [ ] | ⏳ | `reporte.md` | Lo comprueba el script |
+| Crear empresa RFC `XAXX010101000`, régimen 601 | - [ ] | ⏳ | `macos_02_*` | Flujo manual con clicks humanos |
+| Alta de José Pérez Núñez | - [ ] | ⏳ | `macos_02_trabajador.png` | Flujo manual |
+| Periodo quincenal enero 2026 y recibo | - [ ] | ⏳ | `macos_03_recibo.png` | Flujo manual |
+| Click en **Descargar PDF** → archivo se descarga → abrir en Preview → verificar acentos | - [ ] | ⏳ | `macos_04_pdf_acentos.png` | Botón enlazado en P0-A; verificar `José Pérez Núñez` |
+| Captura de la ruta de la BD | - [ ] | ⏳ | `macos_05_bd_ruta.png` | Flujo manual |
 
 Nota honesta: la prueba se hará con un usuario nuevo en la Mac del
 desarrollador, no con una máquina limpia virgen. Eso cubre aproximadamente el
@@ -258,7 +259,8 @@ bloqueante específico.
 
 ### Verificación visual — Windows
 
-**Estado: ⏳ Pendiente — opciones documentadas, decisión del desarrollador.**
+**Estado: ⏳ Pendiente de verificación manual (VM Windows 11, Parallels
+Standard). Guía en `docs/verificacion_windows_manual.md`.**
 No es un bloqueo técnico definitivo: la edición actual de Parallels limita
 `exec`, `capture` y `send-key-event` a Pro/Business, y el host macOS no es una
 máquina limpia (tiene Python 3.14 y cargo). Hay tres caminos viables:
@@ -269,14 +271,15 @@ máquina limpia (tiene Python 3.14 y cargo). Hay tres caminos viables:
 | Azure VM Windows | ~$30 USD/mes | 1-2 hrs | Manual | Sí, si no quieres Parallels |
 | Usuario nuevo Windows físico | Gratis | 30 min | Manual | Sí, si tienes acceso |
 
-| Paso | Resultado | Captura | Notas |
-|------|-----------|---------|-------|
-| Elegir opción de entorno Windows | ⏳ | — | Decisión del desarrollador |
-| Descargar `NominaMX_0.1.0_x64_en-US.msi` del CI verde | ⏳ | — | `scripts/empaquetar_release.sh` ya prepara el bundle |
-| Instalar con SmartScreen ("Más información" → "Ejecutar de todas formas") | ⏳ | `windows_01_app.png` | Flujo manual |
-| Empresa, trabajador, periodo y recibo | ⏳ | `windows_02_*`, `windows_03_recibo.png` | Flujo manual con clicks humanos |
-| PDF y acentos en Edge | ⏳ | `windows_04_pdf_acentos.png` | Botón de descarga aún no enlazado en UI |
-| BD en `%APPDATA%\com.nomina.mx\nomina.db` | ⏳ | `windows_05_bd_ruta.png` | Verificación manual |
+| Paso | Checklist | Resultado | Captura | Notas |
+|------|-----------|-----------|---------|-------|
+| Elegir opción de entorno Windows | - [ ] | ⏳ | — | Parallels Standard sirve; ver tabla de opciones |
+| Descargar `NominaMX_0.1.0_x64_en-US.msi` del CI verde | - [ ] | ⏳ | — | `scripts/empaquetar_release.sh` ya prepara el bundle |
+| Copiar el `.msi` a `\\Mac\Home\Desktop\` | - [ ] | ⏳ | — | Carpeta compartida de Parallels |
+| Instalar con SmartScreen ("Más información" → "Ejecutar de todas formas") | - [ ] | ⏳ | `windows_01_app.png` | Flujo manual |
+| Empresa, trabajador, periodo y recibo | - [ ] | ⏳ | `windows_02_*`, `windows_03_recibo.png` | Flujo manual con clicks humanos |
+| Click en **Descargar PDF** y acentos en Edge | - [ ] | ⏳ | `windows_04_pdf_acentos.png` | Botón enlazado en P0-A; verificar `José Pérez Núñez` |
+| BD en `%APPDATA%\com.nomina.mx\nomina.db` | - [ ] | ⏳ | `windows_05_bd_ruta.png` | Verificación manual |
 
 **Impacto:** Sin verificación visual Windows, no se puede declarar v0.9.0 ni
 iniciar piloto con contadores. No se crea el tag `v0.9.0`.
