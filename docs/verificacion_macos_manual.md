@@ -15,6 +15,10 @@ cuenta habitual. No requiere Parallels.
   exporte `GH_BIN=/ruta/a/gh` y `GH_TOKEN=su_token`.
 - No se necesita Parallels ni ninguna VM.
 
+> **Antes de empezar:** el bundle actualmente en `/Applications` es el antiguo
+> (con el bug de checksum de migración). No lo reutilice: instale el del run
+> `44489870148`. Guía ejecutiva: `docs/p0c_instrucciones_ejecucion.md`.
+
 ## Pasos exactos
 
 1. **Crear el usuario.** En **Preferencias del Sistema → Usuarios y grupos**,
@@ -29,10 +33,11 @@ cuenta habitual. No requiere Parallels.
    GH_BIN=/usr/local/bin/gh GH_TOKEN=su_token scripts/verificacion_macos.sh
    ```
 
-   El script: elige el último run verde de `main`, descarga
-   `NominaMX-macos-latest`, monta el `.dmg` con `hdiutil`, copia
-   `NominaMX.app` a `/Applications`, la abre, espera 5 segundos, guarda
-   `macos_01_app.png`, verifica
+   El script: elige el último run verde de `ci.yml` y rechaza cualquier run
+   anterior a `44489870148` (el bundle anterior crasheaba por checksum de
+   migración), descarga `NominaMX-macos-latest`, monta el `.dmg` con
+   `hdiutil`, **reemplaza** `NominaMX.app` en `/Applications`, la abre, espera
+   5 segundos, guarda `macos_01_app.png`, verifica
    `~/Library/Application Support/com.nomina.mx/nomina.db` y escribe
    `docs/evidencia/verificacion_visual/macos/reporte.md`.
 4. **Gatekeeper:** si la app no abre, haga clic derecho sobre
@@ -68,7 +73,7 @@ cuenta habitual. No requiere Parallels.
 - [ ] Usuario `VerificacionNominaMX` creado como estándar (sin admin).
 - [ ] Sesión iniciada con ese usuario; sin Homebrew, Python, cargo ni Node.
 - [ ] `scripts/verificacion_macos.sh` ejecutado y `reporte.md` generado.
-- [ ] `.dmg` descargado del último CI verde e instalado en `/Applications`.
+- [ ] `.dmg` descargado del último CI verde (`ci.yml`, ≥ `44489870148`) e instalado en `/Applications`.
 - [ ] Gatekeeper superado ("Abrir de todas formas").
 - [ ] Empresa `XAXX010101000`, régimen `601` creada.
 - [ ] Trabajador José Pérez Núñez dado de alta con los datos indicados.
@@ -85,13 +90,14 @@ cuenta habitual. No requiere Parallels.
 | Síntoma | Cómo resolverlo |
 |---------|-----------------|
 | Gatekeeper impide abrir ("app dañada" o no abre) | Clic derecho → **Abrir**, o **Preferencias del Sistema → Seguridad y Privacidad → Abrir de todas formas**. |
-| "NominaMX se cerró inesperadamente" apenas se abre | Asegúrese de que el `.dmg` provenga de un run de CI **posterior a este fix**. Si venía de un bundle anterior, instale el nuevo; como workaround temporal renombre `~/Library/Application Support/com.nomina.mx/nomina.db` a `nomina.db.antiguo` y vuelva a abrir. Ver `docs/smoke_test.md`, sección del incidente 2026-11-19. |
+| "NominaMX se cerró inesperadamente" apenas se abre | Asegúrese de que el `.dmg` provenga del run `44489870148` o posterior. Si venía de un bundle anterior, instale el nuevo; como workaround temporal renombre `~/Library/Application Support/com.nomina.mx/nomina.db` a `nomina.db.antiguo` y vuelva a abrir. Ver `docs/smoke_test.md`, sección "Bug conocido: crash en primer arranque con BD legacy". |
 | `gh: command not found` | Exportar `GH_BIN=/ruta/a/gh` y `GH_TOKEN=...`. Como alternativa, descargar el bundle con `scripts/empaquetar_release.sh` en la cuenta del desarrollador e instalar el `.dmg` manualmente; el script de verificación **no acepta** un `.dmg` local. |
 | `screencapture` falla | **Preferencias del Sistema → Privacidad y seguridad → Grabación de pantalla**: agregar Terminal. |
 | PDF muestra `JosÃ©` o acentos rotos | Adjuntar la captura y reportar como **bloqueante específico**: posible bug de encoding de `@react-pdf/renderer` en macOS. |
 | No se crea `nomina.db` | Verificar permisos: `ls -ld ~/Library/Application\ Support/com.nomina.mx/`. Si la carpeta no existe o no pertenece al usuario, crearla con `mkdir -p` desde esa cuenta y volver a abrir la app. Si el script avisó "sin permisos; se usa copia temporal", revisar también esa ruta. |
-| `cp -R ... /Applications/` sin permisos | El script usa una copia temporal y lo registra como ⚠️ en `reporte.md`; anotarlo en `smoke_test.md`. |
+| `cp -R ... /Applications/` sin permisos | El script usa una copia temporal y lo registra como ⚠️ en `reporte.md`; anotar el error exacto en `smoke_test.md` y no marcar P0-C como terminado hasta que el bundle esté en `/Applications`. |
 
 **Resultado esperado:** macOS queda "✅ Verificado (usuario nuevo, no máquina
 virgen)". Si algún paso falla, se documenta el error exacto y se mantiene como
-bloqueante específico. No se declara `v0.9.0` mientras Windows siga pendiente.
+bloqueante específico. No se declara `v0.9.0` mientras Windows siga pendiente
+de verificación manual en VM con el `.msi` del run `44489870148`.

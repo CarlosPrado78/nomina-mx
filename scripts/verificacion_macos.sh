@@ -13,6 +13,10 @@ REPORTE="$EVID_DIR/reporte.md"
 TMP_DIR="$(mktemp -d)"
 FALLO=0
 
+# El bundle anterior al commit 71a5b7c crasheaba en el primer arranque con BD
+# legacy (checksum de la migración 2). Nunca instalar un run anterior a este.
+RUN_MINIMO=44489870148
+
 mkdir -p "$EVID_DIR"
 : > "$REPORTE"
 
@@ -39,16 +43,21 @@ command -v "$GH_BIN" >/dev/null 2>&1 || {
   exit 1
 }
 
-RUN_ID="$("$GH_BIN" run list --repo "$REPO" --branch main --limit 30 \
-  --json databaseId,conclusion,event \
-  --jq '[.[] | select(.conclusion == "success" and .event == "push")][0].databaseId' 2>/dev/null)"
+RUN_ID="$("$GH_BIN" run list --repo "$REPO" --workflow=ci.yml --status=success --limit=1 \
+  --json databaseId --jq '.[0].databaseId' 2>/dev/null)"
 
 if [ -z "$RUN_ID" ]; then
-  fallar 'No se encontró un run verde reciente en main.'
-  registrar 'Descargar artefacto' '❌' 'sin run verde'
+  fallar 'No se encontró un run verde de ci.yml.'
+  registrar 'Descargar artefacto' '❌' 'sin run verde de ci.yml'
   exit 1
 fi
-registrar 'Descargar artefacto' "✅ run $RUN_ID" 'último run verde de main'
+
+if [ "$RUN_ID" -lt "$RUN_MINIMO" ] 2>/dev/null; then
+  fallar "El run $RUN_ID es anterior al fix de migración (mínimo $RUN_MINIMO). No se instalará."
+  registrar 'Descargar artefacto' '❌' "run $RUN_ID anterior al fix"
+  exit 1
+fi
+registrar 'Descargar artefacto' "✅ run $RUN_ID" 'último run verde de ci.yml (≥ 44489870148)'
 
 if ! "$GH_BIN" run download "$RUN_ID" --repo "$REPO" \
     --name 'NominaMX-macos-latest' --dir "$TMP_DIR"; then
@@ -77,9 +86,13 @@ registrar 'Montar .dmg' '✅' 'hdiutil attach'
 if [ -d /Applications/NominaMX.app ]; then
   cp -R /Applications/NominaMX.app "$TMP_DIR/NominaMX.app.anterior" 2>/dev/null || true
 fi
-if cp -R "$MONTURA/NominaMX.app" /Applications/ 2>/dev/null; then
+# cp -R sobre un .app existente fusiona directorios y deja binarios viejos:
+# hay que quitar el bundle anterior para que el reemplazo sea real.
+if rm -rf /Applications/NominaMX.app 2>/dev/null && \
+   cp -R "$MONTURA/NominaMX.app" /Applications/ 2>/dev/null && \
+   [ -x /Applications/NominaMX.app/Contents/MacOS/nomina-mx ]; then
   APP='/Applications/NominaMX.app'
-  registrar 'Instalar en /Applications' '✅' "$APP"
+  registrar 'Instalar en /Applications' '✅' "$APP (anterior reemplazado; respaldo en $TMP_DIR)"
 else
   APP="$TMP_DIR/NominaMX.app"
   cp -R "$MONTURA/NominaMX.app" "$APP" || {

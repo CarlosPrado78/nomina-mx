@@ -483,7 +483,11 @@ Fuentes oficiales consultadas:
 
 ---
 
-## 2026-11-19 — Fix del crash de macOS por migración 2
+## Bug crítico: crash de arranque por checksum de migración
+
+Fecha: 2026-11-19. Commit del fix: `71a5b7c`. Bundle corregido: run de CI
+`44489870148` (https://github.com/CarlosPrado78/nomina-mx/actions/runs/44489870148),
+con macOS y Windows en verde.
 
 - **Síntoma reproducible:** al abrir el bundle instalado,
   `PluginInitialization("sql", "migration 2 was previously applied but has been modified")`.
@@ -493,18 +497,20 @@ Fuentes oficiales consultadas:
 - **Causa:** la BD del host tenía el seed 2026 original (UMA y subsidio de una
   sola vigencia). El seed se corrigió después en la migración 2, pero
   `tauri_plugin_sql` valida checksums y rechaza migraciones aplicadas
-  modificadas. No había datos de negocio en esa BD (0 empresas, 0 trabajadores,
-  0 periodos, 0 recibos).
+  modificadas. Con `panic = "abort"`, el fallo se convierte en `SIGABRT` y la
+  app se cierra sin mostrar interfaz. No había datos de negocio en esa BD (0
+  empresas, 0 trabajadores, 0 periodos, 0 recibos).
 - **Corrección:** migraciones propias en `src-tauri/src/db/mod.rs`
   (`_nomina_migrations`, traslado de `_sqlx_migrations`, sin validación de
-  checksum), nueva migración 6 `0005_actualiza_seed_2026.sql`, llamada desde el
-  `setup` de `src-tauri/src/lib.rs`. Se eliminaron `tauri-plugin-sql` de
-  `Cargo.toml`, `@tauri-apps/plugin-sql` de `package.json` y
-  `plugins.sql.preload` de `tauri.conf.json`; se regeneraron `Cargo.lock`,
+  checksum), nueva migración 6 `0005_actualiza_seed_2026.sql` para BDs ya
+  instaladas, llamada desde el `setup` de `src-tauri/src/lib.rs`. Se eliminaron
+  `tauri-plugin-sql` de `Cargo.toml`, `@tauri-apps/plugin-sql` de `package.json`
+  y `plugins.sql.preload` de `tauri.conf.json`; se regeneraron `Cargo.lock`,
   `pnpm-lock.yaml` y los esquemas Tauri.
-- **Workaround inmediato documentado:** renombrar
+- **Workaround para BDs ya afectadas (no borra datos):** renombrar
   `~/Library/Application Support/com.nomina.mx/nomina.db` a
-  `nomina.db.antiguo` y volver a abrir, o instalar el bundle corregido.
+  `nomina.db.antiguo` y volver a abrir. La solución definitiva es instalar el
+  bundle corregido del run `44489870148`.
 - **Evidencia:** nuevo `src-tauri/tests/migrations.rs` con BD nueva (6
   migraciones, 2 filas UMA, 2 subsidios), BD legacy con `_sqlx_migrations`
   versions 1–2 más seed viejo (versión 6 corrige los datos y conserva una
@@ -514,5 +520,8 @@ Fuentes oficiales consultadas:
   corregido (3.25 MiB). El binario se lanzó con un `HOME` temporal que
   contenía la BD legacy real: quedó vivo, log vacío, migraciones 1–6 y seed
   corregido. Un segundo arranque no duplicó filas (6/2/2).
-- **Estado:** macOS y Windows siguen pendientes de verificación visual con el
-  bundle corregido. No se crea tag `v0.9.0`, Release ni piloto.
+- **Estado:** código y bundle corregidos en `71a5b7c` / run `44489870148`.
+  Windows CI del mismo run: verde; `.msi` listo para verificación manual en VM.
+  Siguen pendientes la verificación visual de P0-C con el bundle corregido y la
+  decisión de entorno para la verificación manual en Windows. No se crea tag
+  `v0.9.0`, Release ni piloto.

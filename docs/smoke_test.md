@@ -37,7 +37,7 @@ cat /tmp/nomina_app.log       # sin errores
 
 Log: vacío (sin errores). Proceso terminado con `pkill -f nomina-mx`.
 
-### Incidente 2026-11-19: crash al abrir el bundle instalado
+### Bug conocido: crash en primer arranque con BD legacy
 
 Reporte del usuario: `EXC_CRASH (SIGABRT)`, `Abort trap: 6`, proceso
 `/Applications/NominaMX.app/Contents/MacOS/nomina-mx`, UUID
@@ -83,10 +83,26 @@ proceso vivo después de 7 segundos, log vacío, `_nomina_migrations` con
 versiones 1–6, 2 filas de UMA y 2 de subsidio con los valores correctos. Un
 segundo arranque sobre la misma BD siguió vivo y no duplicó filas (6/2/2).
 
-Estado: el fix está en código, en pruebas y verificado con el bundle compilado
-localmente, **pero el bundle actualmente instalado en `/Applications` sigue
-siendo el antiguo**. Hay que instalar el bundle nuevo del CI y repetir P0-C
-antes de declarar v0.9.
+Referencias: commit del fix `71a5b7c`; bundle corregido en el run `44489870148`
+(https://github.com/CarlosPrado78/nomina-mx/actions/runs/44489870148). El job
+`windows-latest` de ese mismo run terminó en verde y produjo el `.msi`.
+
+**IMPORTANTE — actualizar `/Applications` antes de P0-C:** el bundle que hoy
+está en `/Applications/NominaMX.app` sigue siendo el **antiguo** y crashea,
+aunque el código ya esté corregido en `main`. Descargar el corregido:
+
+```bash
+gh run download 44489870148 --repo CarlosPrado78/nomina-mx -n NominaMX-macos-latest
+```
+
+Desde la sesión del usuario nuevo, ejecutar `scripts/verificacion_macos.sh`:
+consulta el último run verde de `ci.yml`, rechaza cualquier run anterior a
+`44489870148`, reemplaza la app en `/Applications`, la abre y captura el
+arranque. Guía completa: `docs/p0c_instrucciones_ejecucion.md`.
+
+Estado: el fix está en código, en pruebas, verificado localmente y empaquetado
+en el run `44489870148`. **Falta ejecutar P0-C con el bundle corregido** antes
+de declarar v0.9.
 
 ## Verificación en Windows
 
@@ -246,7 +262,7 @@ compila y empaqueta .msi/.dmg, pero no ejecuta la app.
 
 | Paso | Resultado | Captura |
 |------|-----------|---------|
-| Descargar artefacto `NominaMX-macos-latest` del run 44269152626 | ❌ no ejecutado | — |
+| Descargar artefacto `NominaMX-macos-latest` del run 44489870148 (bundle corregido) | ❌ no ejecutado | — |
 | Instalar .dmg (Gatekeeper → clic derecho → Abrir) | ❌ no ejecutado | — |
 | Empresa → trabajador → periodo → recibo → PDF | ❌ no ejecutado | — |
 | Verificar acentos en Preview | ❌ no ejecutado | — |
@@ -272,15 +288,18 @@ El bloqueo anterior (`sudo: a password is required`) ya no es el problema de
 fondo: se generó un script que el desarrollador debe ejecutar **dentro** de la
 cuenta nueva, donde sí podrá crear y usar el usuario sin depender del agente.
 El bloqueante funcional del botón de PDF (P0-A) ya está resuelto y cubierto por
-tests. El crash por migración 2 también quedó corregido en código con prueba de
-regresión; falta instalar el bundle nuevo y ejecutar el flujo humano.
+tests. El crash por migración 2 quedó corregido en código (`71a5b7c`) con prueba
+de regresión y bundle propio en el run `44489870148`; falta instalar ese bundle
+y ejecutar el flujo humano.
 
 Preparación lista:
 
 - `scripts/verificacion_macos.sh` (ejecutable): descarga el `.dmg` del último
-  run verde, lo monta con `hdiutil`, copia la app a `/Applications`, la abre,
-  espera 5 segundos, captura `macos_01_app.png`, verifica la BD y escribe
+  run verde de `ci.yml` (nunca uno anterior a `44489870148`), lo monta con
+  `hdiutil`, **reemplaza** la app en `/Applications`, la abre, espera 5
+  segundos, captura `macos_01_app.png`, verifica la BD y escribe
   `docs/evidencia/verificacion_visual/macos/reporte.md`.
+- Instrucciones de ejecución: `docs/p0c_instrucciones_ejecucion.md`.
 - Procedimiento manual documentado en `docs/manual_usuario.md`, sección
   'Verificación post-instalación'.
 
@@ -341,8 +360,8 @@ iniciar piloto con contadores. No se crea el tag `v0.9.0`.
 | Evidencia | Estado |
 |-----------|--------|
 | Build .dmg macOS | OK |
-| Ejecución app macOS | ⚠️ El bundle instalado crasheó el 2026-11-19 por checksum de migración 2; workaround y fix documentados arriba. Falta instalar el bundle corregido y repetir P0-C |
-| Build/ejecución .msi Windows | OK (CI windows-latest, run 44016157633) |
+| Ejecución app macOS | ⚠️ El bundle instalado crasheó el 2026-11-19 por checksum de migración 2; workaround y fix documentados arriba. Falta instalar el bundle corregido del run `44489870148` y repetir P0-C |
+| Build/ejecución .msi Windows | OK (CI windows-latest en verde en el run `44489870148`; `.msi` listo para verificación manual en VM) |
 | PDF acentos en Preview/Edge | Botón enlazado en UI; revisión visual pendiente |
 | CFDI timbrado sandbox (UUID) | Pendiente |
 | Verificación visual end-to-end en entorno limpio | ⏳ macOS pendiente (P0-C, con bundle corregido); Windows pendiente (decisión de entorno) |
