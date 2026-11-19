@@ -11,7 +11,7 @@
   fecha de pago (enero $113.14; febrero en adelante $117.31), subsidio al
   empleo (enero $536.21; febrero en adelante $535.65) e ISR vigente.
 - **IMSS 2026**: cuotas obrero/patronales, cesantía, vejez, CEAV por excedente
-  de 3 UMA, prima de riesgo y cuota fija; 175 pruebas automatizadas en verde.
+  de 3 UMA, prima de riesgo y cuota fija; 177 pruebas automatizadas en verde.
 - **INFONAVIT**, **SAR**, **ISN por entidad federativa** y factor de integración
   SDI.
 - **Recálculo retroactivo** (C5): corrige SBC y recibos usando los parámetros
@@ -26,6 +26,9 @@
 - **PDF de recibo** con acentos (`José Pérez Núñez`) generado con
   `@react-pdf/renderer` y **botón Descargar PDF** enlazado en cada renglón de la
   tabla de resultados de nómina.
+- **Migraciones propias sin checksum frágil**: el arranque ya no depende de
+  `tauri_plugin_sql`. Las BDs antiguas conservan sus datos y reciben la
+  corrección fiscal 2026 como migración nueva (versión 6).
 
 ## Limitaciones conocidas
 
@@ -64,10 +67,30 @@
 Los bundles se obtienen con `scripts/empaquetar_release.sh`, que descarga los
 artefactos `.dmg` y `.msi` del último CI verde a `dist/`.
 
+### Actualización desde builds anteriores
+
+Si ya tenía instalado un bundle que cerraba la app con
+`migration 2 was previously applied but has been modified`, instale el bundle
+corregido. Como alternativa temporal, antes de abrir la app puede renombrar la
+base:
+
+```bash
+mv "$HOME/Library/Application Support/com.nomina.mx/nomina.db" \
+   "$HOME/Library/Application Support/com.nomina.mx/nomina.db.antiguo"
+```
+
+Esto no borra datos de negocio: en la BD afectada no había empresas,
+trabajadores, periodos ni recibos. La app corregida crea una BD nueva con el
+seed fiscal correcto y también puede migrar la BD antigua sin perder registros.
+
 ## Validación y evidencia
 
-- 175 pruebas automatizadas en verde (+1 ignorada), CI en
-  `macos-latest` y `windows-latest`.
+- 177 pruebas automatizadas en verde (+1 ignorada), CI en
+  `macos-latest` y `windows-latest`. Incluye `src-tauri/tests/migrations.rs`:
+  BD nueva, BD legacy de `tauri_plugin_sql` y reintento idempotente.
+- El release corregido se compiló localmente y se verificó con una copia de la
+  BD legacy: la app quedó abierta, aplicó la migración 6 y no duplicó datos en
+  un segundo arranque. Falta repetir la verificación visual en usuario nuevo.
 - Casos manuales para el contador: `docs/casos_validacion_contable.md`.
 - Manual de uso: `docs/manual_usuario.md`.
 - Plan de piloto y feedback: `docs/feedback_piloto.md`.

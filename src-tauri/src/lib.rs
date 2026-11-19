@@ -8,53 +8,12 @@ use tauri::Manager;
 
 pub fn run() {
     tauri::Builder::default()
-        .plugin(
-            tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:nomina.db", vec![
-                    tauri_plugin_sql::Migration {
-                        version: 1,
-                        description: "init",
-                        sql: include_str!("../migrations/0001_init.sql"),
-                        kind: tauri_plugin_sql::MigrationKind::Up,
-                    },
-                    tauri_plugin_sql::Migration {
-                        version: 2,
-                        description: "seed fiscal 2026",
-                        sql: include_str!("../migrations/0002_seed_fiscal_2026.sql"),
-                        kind: tauri_plugin_sql::MigrationKind::Up,
-                    },
-                    tauri_plugin_sql::Migration {
-                        version: 3,
-                        description: "bloque B: parametros de horas extra",
-                        sql: include_str!("../migrations/0003_horas_extra.sql"),
-                        kind: tauri_plugin_sql::MigrationKind::Up,
-                    },
-                    tauri_plugin_sql::Migration {
-                        // El archivo se llama 0003_audit_log.sql por la
-                        // definición del índice, pero la versión 3 ya está
-                        // ocupada por horas extra.
-                        version: 4,
-                        description: "C3: log de auditoria inmutable",
-                        sql: include_str!("../migrations/0003_audit_log.sql"),
-                        kind: tauri_plugin_sql::MigrationKind::Up,
-                    },
-                    tauri_plugin_sql::Migration {
-                        version: 5,
-                        description: "C4: multi-empresa con seleccion persistida",
-                        sql: include_str!("../migrations/0004_multi_empresa.sql"),
-                        kind: tauri_plugin_sql::MigrationKind::Up,
-                    },
-                ])
-                .build(),
-        )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             let app_dir = app.path().app_data_dir().expect("no app data dir");
-            std::fs::create_dir_all(&app_dir).ok();
-            // Run migrations on startup
-            let db_path = app_dir.join("nomina.db");
-            let _ = db_path;
+            db::run_migrations(&app_dir)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

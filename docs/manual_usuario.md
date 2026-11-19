@@ -237,6 +237,18 @@ pendiente. Los comprobantes generados son de muestra y no tienen validez fiscal.
 información → Ejecutar de todas formas**. Es una advertencia por falta de firma
 de código, no un virus.
 
+**¿Qué hago si en macOS dice "NominaMX se cerró inesperadamente"?** Instale el
+bundle corregido. Si necesita abrir de inmediato el anterior, renombre la base
+en Terminal:
+
+```bash
+mv "$HOME/Library/Application Support/com.nomina.mx/nomina.db" \
+   "$HOME/Library/Application Support/com.nomina.mx/nomina.db.antiguo"
+```
+
+Luego abra NominaMX. El archivo antiguo queda con sufijo `.antiguo` y no se
+borra ningún dato de negocio.
+
 
 
 

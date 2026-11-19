@@ -9,7 +9,8 @@
 - Se compila en un **binario único de 4.9 MB**:
   `src-tauri/target/release/nomina-mx`.
 - La persistencia es **SQLite embebido** accedido con SQLx; las migraciones
-  están en `src-tauri/migrations/`.
+  están en `src-tauri/migrations/` y se aplican con el runner propio de
+  `src-tauri/src/db/mod.rs` (sin `tauri_plugin_sql`).
 - La comunicación frontend↔backend es **IPC de Tauri** (`invoke` y
   `generate_handler!` en `src-tauri/src/lib.rs`), no HTTP.
 - No hay runtime externo: el usuario final no necesita Python, Node ni Rust

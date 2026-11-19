@@ -480,3 +480,39 @@ Fuentes oficiales consultadas:
   `docs/verificacion_macos_manual.md` y
   `docs/verificacion_windows_manual.md`. `docs/smoke_test.md` referencia ambas
   guías y usa tablas con checkbox.
+
+---
+
+## 2026-11-19 — Fix del crash de macOS por migración 2
+
+- **Síntoma reproducible:** al abrir el bundle instalado,
+  `PluginInitialization("sql", "migration 2 was previously applied but has been modified")`.
+  El reporte de macOS era `EXC_CRASH (SIGABRT)` / `Abort trap: 6`; con
+  `panic = "abort"` el error cerraba la app sin interfaz. UUID del binario
+  instalado: `67791E3D-C210-34D5-A98E-AFC661E928CF`.
+- **Causa:** la BD del host tenía el seed 2026 original (UMA y subsidio de una
+  sola vigencia). El seed se corrigió después en la migración 2, pero
+  `tauri_plugin_sql` valida checksums y rechaza migraciones aplicadas
+  modificadas. No había datos de negocio en esa BD (0 empresas, 0 trabajadores,
+  0 periodos, 0 recibos).
+- **Corrección:** migraciones propias en `src-tauri/src/db/mod.rs`
+  (`_nomina_migrations`, traslado de `_sqlx_migrations`, sin validación de
+  checksum), nueva migración 6 `0005_actualiza_seed_2026.sql`, llamada desde el
+  `setup` de `src-tauri/src/lib.rs`. Se eliminaron `tauri-plugin-sql` de
+  `Cargo.toml`, `@tauri-apps/plugin-sql` de `package.json` y
+  `plugins.sql.preload` de `tauri.conf.json`; se regeneraron `Cargo.lock`,
+  `pnpm-lock.yaml` y los esquemas Tauri.
+- **Workaround inmediato documentado:** renombrar
+  `~/Library/Application Support/com.nomina.mx/nomina.db` a
+  `nomina.db.antiguo` y volver a abrir, o instalar el bundle corregido.
+- **Evidencia:** nuevo `src-tauri/tests/migrations.rs` con BD nueva (6
+  migraciones, 2 filas UMA, 2 subsidios), BD legacy con `_sqlx_migrations`
+  versions 1–2 más seed viejo (versión 6 corrige los datos y conserva una
+  empresa de prueba) y reintento idempotente. `cargo test`: **177 passed; 0
+  failed; 1 ignored**. Frontend: 9 tests, `tsc --noEmit` OK.
+- **Verificación local adicional:** `cargo tauri build` generó el `.dmg`
+  corregido (3.25 MiB). El binario se lanzó con un `HOME` temporal que
+  contenía la BD legacy real: quedó vivo, log vacío, migraciones 1–6 y seed
+  corregido. Un segundo arranque no duplicó filas (6/2/2).
+- **Estado:** macOS y Windows siguen pendientes de verificación visual con el
+  bundle corregido. No se crea tag `v0.9.0`, Release ni piloto.

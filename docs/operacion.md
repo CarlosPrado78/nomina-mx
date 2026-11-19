@@ -1,5 +1,18 @@
 # Operación
 
+## Migraciones y arranque
+
+Las migraciones se ejecutan al iniciar desde `src-tauri/src/db/mod.rs`, no desde
+`tauri_plugin_sql`. El runner crea `<app_data_dir>/nomina.db`, traslada el
+historial de `_sqlx_migrations` a `_nomina_migrations` y aplica solo las
+versiones pendientes. No valida checksums: un cambio en un seed ya instalado se
+publica como **migración nueva**, nunca editando una anterior.
+
+Versiones registradas: 1 init, 2 seed fiscal 2026, 3 horas extra, 4 auditoría,
+5 multi-empresa y 6 corrección del seed 2026 (UMA y subsidio por vigencia).
+`src-tauri/tests/migrations.rs` cubre BD nueva, BD legacy y reintento
+idempotente.
+
 ## Importación masiva de trabajadores (CSV/Excel)
 
 Estado: **Cubierto** (ÍTEM C2). Implementado en
@@ -166,8 +179,9 @@ Referencias: CFF art. 28 (conservación de información y registros) y LSS art. 
 (registro de movimientos afiliatorios).
 
 > Nota de versión: el archivo se llama `0003_audit_log.sql` por la definición
-> del índice, pero se registra como migración **4** en `lib.rs` porque la
-> versión 3 ya está ocupada por `0003_horas_extra.sql`.
+> del índice, pero se registra como migración **4** en
+> `src-tauri/src/db/mod.rs` porque la versión 3 ya está ocupada por
+> `0003_horas_extra.sql`.
 
 ### Esquema
 
@@ -255,8 +269,8 @@ Referencias: LISR art. 79 fracc. III (requisitos de deducción de nómina) y
 CFF art. 27 (contabilidad separada por establecimiento).
 
 > Nota de versión: el archivo se llama `0004_multi_empresa.sql` y se registra
-> como migración **5** en `lib.rs` (1 init, 2 seed fiscal, 3 horas extra,
-> 4 auditoría, 5 multi-empresa).
+> como migración **5** en `src-tauri/src/db/mod.rs` (1 init, 2 seed fiscal,
+> 3 horas extra, 4 auditoría, 5 multi-empresa; la 6 corrige el seed 2026).
 
 ### Esquema y migración
 

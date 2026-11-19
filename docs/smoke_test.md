@@ -37,6 +37,57 @@ cat /tmp/nomina_app.log       # sin errores
 
 Log: vacío (sin errores). Proceso terminado con `pkill -f nomina-mx`.
 
+### Incidente 2026-11-19: crash al abrir el bundle instalado
+
+Reporte del usuario: `EXC_CRASH (SIGABRT)`, `Abort trap: 6`, proceso
+`/Applications/NominaMX.app/Contents/MacOS/nomina-mx`, UUID
+`67791E3D-C210-34D5-A98E-AFC661E928CF` (coincide con el instalado), macOS
+27.0.1 (26A434), Mac15,11.
+
+Reproducción desde Terminal con el bundle instalado:
+
+```text
+thread 'main' panicked at src/lib.rs:87:10:
+error while running tauri application: PluginInitialization("sql", "migration 2 was previously applied but has been modified")
+```
+
+Causa: la BD de la máquina tenía la migración 2 original (UMA y subsidio de una
+sola vigencia). El seed se corrigió después, pero `tauri_plugin_sql` valida el
+checksum de las migraciones ya aplicadas y aborta el arranque; con
+`panic = "abort"` eso cierra la app sin mostrar interfaz.
+
+**Workaround inmediato** (no pierde datos de negocio; en esa BD había 0
+empresas, 0 trabajadores, 0 periodos y 0 recibos):
+
+```bash
+mv "$HOME/Library/Application Support/com.nomina.mx/nomina.db" \
+   "$HOME/Library/Application Support/com.nomina.mx/nomina.db.antiguo"
+```
+
+Después se vuelve a abrir NominaMX. Para conservar el histórico, también se
+puede renombrar el directorio completo `com.nomina.mx`.
+
+**Corrección definitiva:** se sustituyó el plugin SQL por un runner propio en
+`src-tauri/src/db/mod.rs`, que traslada `_sqlx_migrations` a
+`_nomina_migrations`, no valida checksums y aplica la migración nueva 6
+(`0005_actualiza_seed_2026.sql`) para corregir UMA/subsidio en BDs ya
+instaladas. Se eliminaron `tauri-plugin-sql` de `Cargo.toml`,
+`@tauri-apps/plugin-sql` de `package.json` y `plugins.sql.preload` de
+`tauri.conf.json`. Evidencia: `src-tauri/tests/migrations.rs` (BD nueva, BD
+legacy y reintento idempotente).
+
+Verificación local del fix (2026-11-19): se compiló el release corregido
+(`cargo tauri build`, `.dmg` de 3.25 MiB) y se lanzó el binario con un `HOME`
+temporal que contenía una copia exacta de la BD legacy del host. Resultado:
+proceso vivo después de 7 segundos, log vacío, `_nomina_migrations` con
+versiones 1–6, 2 filas de UMA y 2 de subsidio con los valores correctos. Un
+segundo arranque sobre la misma BD siguió vivo y no duplicó filas (6/2/2).
+
+Estado: el fix está en código, en pruebas y verificado con el bundle compilado
+localmente, **pero el bundle actualmente instalado en `/Applications` sigue
+siendo el antiguo**. Hay que instalar el bundle nuevo del CI y repetir P0-C
+antes de declarar v0.9.
+
 ## Verificación en Windows
 
 Ejecutada en GitHub Actions (`windows-latest`) mediante
@@ -221,7 +272,8 @@ El bloqueo anterior (`sudo: a password is required`) ya no es el problema de
 fondo: se generó un script que el desarrollador debe ejecutar **dentro** de la
 cuenta nueva, donde sí podrá crear y usar el usuario sin depender del agente.
 El bloqueante funcional del botón de PDF (P0-A) ya está resuelto y cubierto por
-tests; falta la ejecución humana del flujo.
+tests. El crash por migración 2 también quedó corregido en código con prueba de
+regresión; falta instalar el bundle nuevo y ejecutar el flujo humano.
 
 Preparación lista:
 
@@ -289,8 +341,8 @@ iniciar piloto con contadores. No se crea el tag `v0.9.0`.
 | Evidencia | Estado |
 |-----------|--------|
 | Build .dmg macOS | OK |
-| Ejecución app macOS | OK (sin errores en log) |
+| Ejecución app macOS | ⚠️ El bundle instalado crasheó el 2026-11-19 por checksum de migración 2; workaround y fix documentados arriba. Falta instalar el bundle corregido y repetir P0-C |
 | Build/ejecución .msi Windows | OK (CI windows-latest, run 44016157633) |
 | PDF acentos en Preview/Edge | Botón enlazado en UI; revisión visual pendiente |
 | CFDI timbrado sandbox (UUID) | Pendiente |
-| Verificación visual end-to-end en entorno limpio | ⏳ macOS pendiente (P0-C); Windows pendiente (decisión de entorno) |
+| Verificación visual end-to-end en entorno limpio | ⏳ macOS pendiente (P0-C, con bundle corregido); Windows pendiente (decisión de entorno) |

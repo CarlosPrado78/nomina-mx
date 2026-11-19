@@ -85,6 +85,7 @@ cuenta habitual. No requiere Parallels.
 | Síntoma | Cómo resolverlo |
 |---------|-----------------|
 | Gatekeeper impide abrir ("app dañada" o no abre) | Clic derecho → **Abrir**, o **Preferencias del Sistema → Seguridad y Privacidad → Abrir de todas formas**. |
+| "NominaMX se cerró inesperadamente" apenas se abre | Asegúrese de que el `.dmg` provenga de un run de CI **posterior a este fix**. Si venía de un bundle anterior, instale el nuevo; como workaround temporal renombre `~/Library/Application Support/com.nomina.mx/nomina.db` a `nomina.db.antiguo` y vuelva a abrir. Ver `docs/smoke_test.md`, sección del incidente 2026-11-19. |
 | `gh: command not found` | Exportar `GH_BIN=/ruta/a/gh` y `GH_TOKEN=...`. Como alternativa, descargar el bundle con `scripts/empaquetar_release.sh` en la cuenta del desarrollador e instalar el `.dmg` manualmente; el script de verificación **no acepta** un `.dmg` local. |
 | `screencapture` falla | **Preferencias del Sistema → Privacidad y seguridad → Grabación de pantalla**: agregar Terminal. |
 | PDF muestra `JosÃ©` o acentos rotos | Adjuntar la captura y reportar como **bloqueante específico**: posible bug de encoding de `@react-pdf/renderer` en macOS. |
